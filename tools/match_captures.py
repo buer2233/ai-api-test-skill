@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-r"""读取 capture/latest.jsonl + tools/page_api_index.json，
-生成 api-test-dwp/capture_selection.md 草稿供用户勾选。
+r"""读取 api_test_dwp_temp/latest.jsonl + api_test_dwp_temp/page_api_index.json，
+生成 api_test_dwp_temp/capture_selection.md 草稿供用户勾选。
 
 用法：
     python match_captures.py
@@ -23,17 +23,39 @@ from datetime import datetime
 from typing import List, Optional
 
 
-TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
-SKILL_DIR = os.path.dirname(TOOLS_DIR)
-INDEX_PATH = os.path.join(TOOLS_DIR, "page_api_index.json")
-DEFAULT_JSONL = os.path.join(SKILL_DIR, "capture", "latest.jsonl")
-OUT_MD = os.path.join(SKILL_DIR, "capture_selection.md")
+def _find_repo_root(start: str) -> Optional[str]:
+    """从 start 向上找到含有 'E10自动化' 子目录的仓库根。"""
+    cur = start
+    for _ in range(10):
+        if os.path.isdir(os.path.join(cur, "E10自动化")):
+            return cur
+        parent = os.path.dirname(cur)
+        if parent == cur:
+            return None
+        cur = parent
+    return None
 
 
-def _load_index() -> dict:
-    if not os.path.isfile(INDEX_PATH):
+def _find_project_root() -> Optional[str]:
+    """从当前工作目录向上查找 test-automation 项目根。"""
+    return _find_repo_root(os.getcwd())
+
+
+def _get_temp_dir() -> str:
+    """返回 api_test_dwp_temp 目录路径，确保目录存在。"""
+    repo_root = _find_project_root()
+    if not repo_root:
+        print("ERROR: 未找到仓库根（含 E10自动化 目录），请确认当前工作目录在 test-automation 项目内", file=sys.stderr)
+        return ""
+    temp_dir = os.path.join(repo_root, "api_test_dwp_temp")
+    os.makedirs(temp_dir, exist_ok=True)
+    return temp_dir
+
+
+def _load_index(index_path: str) -> dict:
+    if not os.path.isfile(index_path):
         return {"methods": [], "by_path": {}}
-    with open(INDEX_PATH, "r", encoding="utf-8") as f:
+    with open(index_path, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -78,14 +100,14 @@ def _normalize_path_for_index(pure_path: str, repo_baseurl_tail: str = "") -> Li
     return cand
 
 
-def _render(records: List[dict], index: dict, jsonl_path: str) -> str:
+def _render(records: List[dict], index: dict, jsonl_path: str, index_path: str, repo_root: str) -> str:
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     lines: List[str] = []
     lines.append(f"# capture_selection（抓包选择草稿）")
     lines.append("")
     lines.append(f"- 生成时间：{now}")
-    lines.append(f"- 抓包数据：`{os.path.relpath(jsonl_path, SKILL_DIR).replace(os.sep, '/')}`")
-    lines.append(f"- 索引来源：`{os.path.relpath(INDEX_PATH, SKILL_DIR).replace(os.sep, '/')}`")
+    lines.append(f"- 抓包数据：`{os.path.relpath(jsonl_path, repo_root).replace(os.sep, '/')}`")
+    lines.append(f"- 索引来源：`{os.path.relpath(index_path, repo_root).replace(os.sep, '/')}`")
     lines.append(f"- 抓包条目：{len(records)} 条（已按 method+path 去重）")
     lines.append("")
     lines.append("## 使用说明")
@@ -179,25 +201,38 @@ def _render(records: List[dict], index: dict, jsonl_path: str) -> str:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--jsonl", default=DEFAULT_JSONL, help="抓包 JSONL 路径")
-    parser.add_argument("--out", default=OUT_MD, help="输出草稿路径")
+    parser.add_argument("--jsonl", default=None, help="抓包 JSONL 路径（默认 api_test_dwp_temp/latest.jsonl）")
+    parser.add_argument("--out", default=None, help="输出草稿路径（默认 api_test_dwp_temp/capture_selection.md）")
     args = parser.parse_args()
 
-    index = _load_index()
+    repo_root = _find_project_root()
+    if not repo_root:
+        print("ERROR: 未找到仓库根（含 E10自动化 目录），请确认当前工作目录在 test-automation 项目内", file=sys.stderr)
+        return 1
+
+    temp_dir = _get_temp_dir()
+    if not temp_dir:
+        return 1
+
+    index_path = os.path.join(temp_dir, "page_api_index.json")
+    jsonl_path = args.jsonl or os.path.join(temp_dir, "latest.jsonl")
+    out_md = args.out or os.path.join(temp_dir, "capture_selection.md")
+
+    index = _load_index(index_path)
     if not index.get("methods"):
         print("WARN: page_api_index.json 为空或缺失，请先运行 scan_page_api.py", file=sys.stderr)
 
-    records = _load_jsonl(args.jsonl)
+    records = _load_jsonl(jsonl_path)
     if not records:
-        print(f"WARN: 抓包数据为空 → {args.jsonl}", file=sys.stderr)
+        print(f"WARN: 抓包数据为空 → {jsonl_path}", file=sys.stderr)
 
     records = _dedup_by_method_path(records)
-    content = _render(records, index, args.jsonl)
+    content = _render(records, index, jsonl_path, index_path, repo_root)
 
-    with open(args.out, "w", encoding="utf-8") as f:
+    with open(out_md, "w", encoding="utf-8") as f:
         f.write(content)
 
-    print(f"[match_captures] records={len(records)} → {args.out}")
+    print(f"[match_captures] records={len(records)} → {out_md}")
     return 0
 
 

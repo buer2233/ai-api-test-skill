@@ -1,11 +1,11 @@
 ---
 name: api-test-dwp
-description: 面向当前 `\test-automation` 仓库的接口自动化通用 skill。用于在 `\test-automation\E10自动化\接口自动化测试` 中新增、修改、补齐、迁移接口测试方法与 pytest 用例，尤其适用于低代码平台 EB 页面相关接口。触发场景包括：新增接口方法、新增接口测试用例、补齐参数化、修复接口断言、按指定位置插入代码、按 URL 查重复实现、处理 UTF-8 中文编码、处理 PYTHONPATH/导入路径、执行 pytest 并根据真实报错循环修复直到通过。
+description: 接口自动化通用 skill，通过 CWD 自动适配当前 test-automation 项目。用于在 `\test-automation\E10自动化\接口自动化测试` 中新增、修改、补齐、迁移接口测试方法与 pytest 用例，尤其适用于低代码平台 EB 页面相关接口。触发场景包括：新增接口方法、新增接口测试用例、补齐参数化、修复接口断言、按指定位置插入代码、按 URL 查重复实现、处理 UTF-8 中文编码、处理 PYTHONPATH/导入路径、执行 pytest 并根据真实报错循环修复直到通过。运行时产物统一放在当前项目 `api_test_dwp_temp/` 目录下。
 ---
 
 # api-test-dwp
 
-这是一个**强绑定当前仓库**的接口自动化编写 skill，目标是把本项目里已经验证有效的编写习惯、问题处理方式和交付格式沉淀为稳定流程。
+这是一个**通过 CWD 自动适配当前项目**的接口自动化编写 skill，目标是把已验证有效的编写习惯、问题处理方式和交付格式沉淀为稳定流程。运行时产物统一落在当前项目 `api_test_dwp_temp/` 目录下。
 
 ## 🚨 前置必填 A：本次任务信息（最高优先级 / 任何工作开始前必须校验）
 
@@ -119,18 +119,18 @@ AI 在 TodoWrite 首项必须显式记录方式编号与 5 项任务信息，例
 
 **执行步骤**：
 
-1. **检查抓包服务器状态**：执行 `api-test-dwp/tools/check_capture_server.py`，退出码解释：
+1. **检查抓包服务器状态**：执行 `tools/check_capture_server.py`，退出码解释：
    ```
    RUNNING (exit=0)        → 进入步骤 2
    NOT_RUNNING (exit=1)    → 后台启动 start.bat：
-                             start /B cmd /c "api-test-dwp\capture\start.bat"
-                             或直接：mitmdump -s api-test-dwp/capture/capture_addon.py --listen-port 12138
+                             start /B cmd /c "capture\start.bat"
+                             或直接：mitmdump -s capture/capture_addon.py --listen-port 12138
                              启动后等待 2 秒再次检测，仍失败 → 提示用户手动双击
    PORT_OCCUPIED (exit=2)  → 提示用户 12138 被非 mitmdump 进程占用，是否运行 stop.bat 释放
    ```
 2. **提示用户操作 UI**：浏览器代理 `127.0.0.1:12138`；证书已装"本地计算机 → 受信任的根证书颁发机构"；完成 UI 操作后回复"继续"
 3. **生成/刷新索引**：执行 `tools/scan_page_api.py`（默认增量，索引超 24 小时自动全量）
-4. **生成勾选草稿**：执行 `tools/match_captures.py` → `api-test-dwp/capture_selection.md`
+4. **生成勾选草稿**：执行 `tools/match_captures.py` → `api_test_dwp_temp/capture_selection.md`
    - **"新接口"**：默认 `[x]`
    - **"已实现接口"**：默认 `[ ]`（如需重跑手勾）
    - **"特殊处理接口"** (`body_skipped=true`)：默认 `[ ]` + ⚠️
@@ -160,7 +160,7 @@ AI 在 TodoWrite 首项必须显式记录方式编号与 5 项任务信息，例
 2. **读取参考上下文**：
    - Read 参考用例全文（docstring、fixture、断言风格）
    - Read 参考用例所属测试类头部（class 装饰器、`self.xxx = XxxAPI()` 的实例化）
-   - 查 `page_api_index.json`，确认参考用例调用的每个方法所在 `page_api` 文件
+   - 查 `api_test_dwp_temp/page_api_index.json`，确认参考用例调用的每个方法所在 `page_api` 文件
 3. **接口查重**（仅当前置 A 不是"无新增接口"时执行）：
    - 从用户描述的业务改动点入手，判断是否真有新 URL 需要新增
    - 若没有真实新接口 → 提醒用户把 `[接口方法文件]/[接口方法位置]` 改为"当前用例无新增接口"后再继续
@@ -193,7 +193,7 @@ AI 在 TodoWrite 首项必须显式记录方式编号与 5 项任务信息，例
    - URL：提取 `pure_path`（剥 host、去 query）
    - 请求头：保留 Content-Type；Cookie 整体替换为用例内 `login_api_new` 返回的 ETEAMSID
    - 请求体：JSON → dict；`application/x-www-form-urlencoded` → 保留 str
-3. **接口查重**：以 `pure_path` 查 `page_api_index.json`
+3. **接口查重**：以 `pure_path` 查 `api_test_dwp_temp/page_api_index.json`
    - 命中 → 直接复用已有方法
    - 未命中 → 按 `[接口方法文件]/[接口方法位置]` 新增
    - 若前置 A 是"当前用例无新增接口"但此处未命中 → **必须打回**，让用户二选一（改前置 A 或改用已有近似方法）
@@ -223,8 +223,8 @@ AI 在 TodoWrite 首项必须显式记录方式编号与 5 项任务信息，例
 
 ### 流程图
 
-- Mermaid 源文件：`api-test-dwp/flow_chart/flow.md`
-- 当前流程图导出文件目录：`api-test-dwp/flow_chart/`
+- Mermaid 源文件：`flow_chart/flow.md`（skill 内置）
+- 当前流程图导出文件目录：`flow_chart/`（skill 内置）
 - `flow_chart/` 目录内已保存当前 skill 的完整流程图 PNG，可直接查看或用于评审/分享
 
 ## 项目内规范锚点
@@ -236,11 +236,15 @@ AI 在 TodoWrite 首项必须显式记录方式编号与 5 项任务信息，例
 - **接口方法规范锚点**：
   - `\test-automation\E10自动化\接口自动化测试\test_case\page_api\eBuilder\ebuilder_page_new1_api.py`
 - **抓包底座**：
-  - `\test-automation\api-test-dwp\capture\capture_addon.py`
+  - `capture/capture_addon.py`（skill 内置工具）
 - **索引与匹配工具**：
-  - `\test-automation\api-test-dwp\tools\scan_page_api.py`
-  - `\test-automation\api-test-dwp\tools\match_captures.py`
-  - `\test-automation\api-test-dwp\tools\check_capture_server.py`
+  - `tools/scan_page_api.py`（skill 内置工具）
+  - `tools/match_captures.py`（skill 内置工具）
+  - `tools/check_capture_server.py`（skill 内置工具）
+- **运行时产物**（位于当前项目）：
+  - `api_test_dwp_temp/latest.jsonl` — 抓包落盘
+  - `api_test_dwp_temp/page_api_index.json` — URL 索引
+  - `api_test_dwp_temp/capture_selection.md` — 勾选草稿
 
 如果用户指定了别的参考文件或明确要求"参考当前位置上下文"，则以用户要求为先。
 
@@ -303,7 +307,7 @@ AI 在 TodoWrite 首项必须显式记录方式编号与 5 项任务信息，例
 ### 3. 先复用，后新增
 
 - 新增接口方法前，先按 **URL 的 pure_path** 搜索仓库内是否已有实现
-- **优先使用 `api-test-dwp/tools/page_api_index.json`**（由 `scan_page_api.py` 生成）：
+- **优先使用 `api_test_dwp_temp/page_api_index.json`**（由 `scan_page_api.py` 生成）：
   - 索引内 `by_path[pure_path]` 命中即视为已实现
   - 索引条目包含 `class`、`bases`，可判断方法是否来自父类
   - 索引缺失或生成时间超过 24 小时时，先执行 `scan_page_api.py` 刷新

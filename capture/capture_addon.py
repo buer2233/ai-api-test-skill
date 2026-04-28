@@ -7,7 +7,7 @@
 - 对二进制/文件响应跳过 body
 - 对登录/登出接口打标
 - 对 Cookie/Authorization 做摘要
-- 落盘 capture/latest.jsonl（JSON Lines）
+- 落盘 api_test_dwp_temp/latest.jsonl（JSON Lines）
 
 启动方式：
     mitmdump -s capture_addon.py --listen-port 12138
@@ -27,7 +27,6 @@ from mitmproxy import ctx, http
 
 
 ADDON_DIR = os.path.dirname(os.path.abspath(__file__))
-JSONL_PATH = os.path.join(ADDON_DIR, "latest.jsonl")
 PREFIX_FILE = os.path.join(ADDON_DIR, "allowed_prefixes.txt")
 
 DEFAULT_PREFIXES = [
@@ -79,7 +78,7 @@ LOGIN_PATH_HINTS = (
 MAX_BODY_BYTES = 1024 * 1024  # 1MB
 
 
-# -------------------- 仓库根与 baseurl --------------------
+# -------------------- 仓库根与临时目录 --------------------
 
 def _find_repo_root(start: str) -> Optional[str]:
     """从 start 向上找到含有 'E10自动化' 子目录的仓库根。"""
@@ -93,6 +92,24 @@ def _find_repo_root(start: str) -> Optional[str]:
         cur = parent
     return None
 
+
+def _find_project_root() -> Optional[str]:
+    """从当前工作目录向上查找 test-automation 项目根。"""
+    return _find_repo_root(os.getcwd())
+
+
+def _get_jsonl_path() -> str:
+    """返回捕获 JSONL 的落地路径，确保 api_test_dwp_temp 目录存在。"""
+    repo_root = _find_project_root()
+    if not repo_root:
+        # 无法定位项目根时回退到 skill 目录
+        return os.path.join(ADDON_DIR, "latest.jsonl")
+    temp_dir = os.path.join(repo_root, "api_test_dwp_temp")
+    os.makedirs(temp_dir, exist_ok=True)
+    return os.path.join(temp_dir, "latest.jsonl")
+
+
+# -------------------- baseurl 解析 --------------------
 
 def _parse_baseurl_from_config(config_path: str) -> Optional[str]:
     """用 AST 解析 RunConfig.baseurl，取第一个"未被注释"的赋值。"""
@@ -115,9 +132,9 @@ def _parse_baseurl_from_config(config_path: str) -> Optional[str]:
 
 
 def _load_baseurl() -> str:
-    repo_root = _find_repo_root(ADDON_DIR)
+    repo_root = _find_project_root()
     if not repo_root:
-        ctx.log.warn("[api-test-dwp] 未找到仓库根（含 E10自动化 目录）")
+        ctx.log.warn("[api-test-dwp] 未找到仓库根（含 E10自动化 目录），请确认当前工作目录在 test-automation 项目内")
         return ""
     config_path = os.path.join(repo_root, "E10自动化", "接口自动化测试", "config.py")
     if not os.path.isfile(config_path):
@@ -194,14 +211,15 @@ class ApiCaptureAddon:
     def __init__(self):
         self.baseurl = _load_baseurl()
         self.prefixes = _load_prefixes()
+        self.jsonl_path = _get_jsonl_path()
         self._ensure_jsonl()
         ctx.log.info(f"[api-test-dwp] baseurl={self.baseurl or '<empty>'}")
         ctx.log.info(f"[api-test-dwp] prefixes={self.prefixes}")
-        ctx.log.info(f"[api-test-dwp] output={JSONL_PATH}")
+        ctx.log.info(f"[api-test-dwp] output={self.jsonl_path}")
 
     def _ensure_jsonl(self):
-        if not os.path.isfile(JSONL_PATH):
-            open(JSONL_PATH, "w", encoding="utf-8").close()
+        if not os.path.isfile(self.jsonl_path):
+            open(self.jsonl_path, "w", encoding="utf-8").close()
 
     def _should_capture(self, flow: http.HTTPFlow) -> bool:
         req = flow.request
@@ -315,7 +333,7 @@ class ApiCaptureAddon:
                 return
             record = self._build_record(flow)
             line = json.dumps(record, ensure_ascii=False)
-            with open(JSONL_PATH, "a", encoding="utf-8") as f:
+            with open(self.jsonl_path, "a", encoding="utf-8") as f:
                 f.write(line + "\n")
         except Exception as e:
             ctx.log.warn(f"[api-test-dwp] 落盘异常: {e}")

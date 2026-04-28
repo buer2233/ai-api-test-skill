@@ -1,12 +1,3 @@
-# 抓包运行时产物
-capture/latest.jsonl
-capture/latest.jsonl.*
-capture/*.log
-
-# 索引与选择草稿
-tools/page_api_index.json
-capture_selection.md
-
 # Python 缓存
 __pycache__/
 *.pyc
@@ -17,3 +8,6 @@ __pycache__/
 
 # 临时文件
 temp_*.py
+
+# api_test_dwp_temp 运行时产物（在各项目根目录下）
+api_test_dwp_temp/

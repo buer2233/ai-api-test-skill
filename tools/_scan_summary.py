@@ -5,7 +5,25 @@ import json
 import os
 from collections import Counter, defaultdict
 
-IDX = os.path.join(os.path.dirname(os.path.abspath(__file__)), "page_api_index.json")
+
+def _find_repo_root(start):
+    cur = start
+    for _ in range(10):
+        if os.path.isdir(os.path.join(cur, "E10自动化")):
+            return cur
+        parent = os.path.dirname(cur)
+        if parent == cur:
+            return None
+        cur = parent
+    return None
+
+
+repo_root = _find_repo_root(os.getcwd())
+if not repo_root:
+    print("ERROR: 未找到仓库根（含 E10自动化 目录），请确认当前工作目录在 test-automation 项目内")
+    exit(1)
+
+IDX = os.path.join(repo_root, "api_test_dwp_temp", "page_api_index.json")
 
 with open(IDX, "r", encoding="utf-8") as f:
     idx = json.load(f)
