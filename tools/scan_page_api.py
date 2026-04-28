@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """扫描 E10自动化/接口自动化测试/test_case/page_api/ 下所有 *.py，
 提取 "URL 字面量 -> (方法名, 类名, 父类列表, 文件路径)" 的索引，
-输出到 api_test_dwp_temp/page_api_index.json。
+输出到 tools/page_api_index.json（全局接口覆盖文档，纳入版本管理）。
 
 用法：
     python scan_page_api.py           # 增量扫描（按 mtime）
@@ -40,6 +40,7 @@ from typing import List, Optional
 
 
 TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
+INDEX_PATH = os.path.join(TOOLS_DIR, "page_api_index.json")
 
 
 def _find_repo_root(start: str) -> Optional[str]:
@@ -57,17 +58,6 @@ def _find_repo_root(start: str) -> Optional[str]:
 def _find_project_root() -> Optional[str]:
     """从当前工作目录向上查找 test-automation 项目根。"""
     return _find_repo_root(os.getcwd())
-
-
-def _get_temp_dir() -> str:
-    """返回 api_test_dwp_temp 目录路径，确保目录存在。"""
-    repo_root = _find_project_root()
-    if not repo_root:
-        print("ERROR: 未找到仓库根（含 E10自动化 目录），请确认当前工作目录在 test-automation 项目内", file=sys.stderr)
-        return ""
-    temp_dir = os.path.join(repo_root, "api_test_dwp_temp")
-    os.makedirs(temp_dir, exist_ok=True)
-    return temp_dir
 
 
 URL_PATTERNS = [
@@ -149,10 +139,10 @@ def _iter_api_files(root: str):
                 yield os.path.join(dirpath, fn)
 
 
-def _load_existing(index_path: str) -> dict:
-    if os.path.isfile(index_path):
+def _load_existing() -> dict:
+    if os.path.isfile(INDEX_PATH):
         try:
-            with open(index_path, "r", encoding="utf-8") as f:
+            with open(INDEX_PATH, "r", encoding="utf-8") as f:
                 return json.load(f)
         except Exception:
             pass
@@ -169,11 +159,6 @@ def main():
         print("ERROR: 未找到仓库根（含 E10自动化 目录），请确认当前工作目录在 test-automation 项目内", file=sys.stderr)
         return 1
 
-    temp_dir = _get_temp_dir()
-    if not temp_dir:
-        return 1
-    index_path = os.path.join(temp_dir, "page_api_index.json")
-
     pages_api_root = os.path.join(
         repo_root, "E10自动化", "接口自动化测试", "test_case", "page_api"
     )
@@ -181,7 +166,7 @@ def main():
         print(f"ERROR: 未找到 page_api 目录 {pages_api_root}", file=sys.stderr)
         return 1
 
-    existing = {} if args.full else _load_existing(index_path)
+    existing = {} if args.full else _load_existing()
     # 按 file 聚合旧条目，便于增量
     old_by_file = {}
     for m in existing.get("methods", []):
@@ -229,12 +214,12 @@ def main():
         },
     }
 
-    with open(index_path, "w", encoding="utf-8") as f:
+    with open(INDEX_PATH, "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, indent=2)
 
     print(
         f"[scan_page_api] scanned={scanned_files} reused={reused_files} "
-        f"methods={len(methods)} unique_paths={len(by_path)} → {index_path}"
+        f"methods={len(methods)} unique_paths={len(by_path)} → {INDEX_PATH}"
     )
     return 0
 

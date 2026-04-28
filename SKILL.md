@@ -160,7 +160,7 @@ AI 在 TodoWrite 首项必须显式记录方式编号与 5 项任务信息，例
 2. **读取参考上下文**：
    - Read 参考用例全文（docstring、fixture、断言风格）
    - Read 参考用例所属测试类头部（class 装饰器、`self.xxx = XxxAPI()` 的实例化）
-   - 查 `api_test_dwp_temp/page_api_index.json`，确认参考用例调用的每个方法所在 `page_api` 文件
+   - 查 `tools/page_api_index.json`（全局接口覆盖文档），确认参考用例调用的每个方法所在 `page_api` 文件
 3. **接口查重**（仅当前置 A 不是"无新增接口"时执行）：
    - 从用户描述的业务改动点入手，判断是否真有新 URL 需要新增
    - 若没有真实新接口 → 提醒用户把 `[接口方法文件]/[接口方法位置]` 改为"当前用例无新增接口"后再继续
@@ -193,7 +193,7 @@ AI 在 TodoWrite 首项必须显式记录方式编号与 5 项任务信息，例
    - URL：提取 `pure_path`（剥 host、去 query）
    - 请求头：保留 Content-Type；Cookie 整体替换为用例内 `login_api_new` 返回的 ETEAMSID
    - 请求体：JSON → dict；`application/x-www-form-urlencoded` → 保留 str
-3. **接口查重**：以 `pure_path` 查 `api_test_dwp_temp/page_api_index.json`
+3. **接口查重**：以 `pure_path` 查 `tools/page_api_index.json`（全局接口覆盖文档）
    - 命中 → 直接复用已有方法
    - 未命中 → 按 `[接口方法文件]/[接口方法位置]` 新增
    - 若前置 A 是"当前用例无新增接口"但此处未命中 → **必须打回**，让用户二选一（改前置 A 或改用已有近似方法）
@@ -241,10 +241,11 @@ AI 在 TodoWrite 首项必须显式记录方式编号与 5 项任务信息，例
   - `tools/scan_page_api.py`（skill 内置工具）
   - `tools/match_captures.py`（skill 内置工具）
   - `tools/check_capture_server.py`（skill 内置工具）
-- **运行时产物**（位于当前项目）：
-  - `api_test_dwp_temp/latest.jsonl` — 抓包落盘
-  - `api_test_dwp_temp/page_api_index.json` — URL 索引
-  - `api_test_dwp_temp/capture_selection.md` — 勾选草稿
+- **全局接口覆盖文档**（纳入版本管理）：
+  - `tools/page_api_index.json` — 全局 URL 索引，扫描或 AI 新增接口后需更新
+- **运行时产物**（位于当前项目 `api_test_dwp_temp/`）：
+  - `latest.jsonl` — 抓包落盘
+  - `capture_selection.md` — 勾选草稿
 
 如果用户指定了别的参考文件或明确要求"参考当前位置上下文"，则以用户要求为先。
 
@@ -307,7 +308,7 @@ AI 在 TodoWrite 首项必须显式记录方式编号与 5 项任务信息，例
 ### 3. 先复用，后新增
 
 - 新增接口方法前，先按 **URL 的 pure_path** 搜索仓库内是否已有实现
-- **优先使用 `api_test_dwp_temp/page_api_index.json`**（由 `scan_page_api.py` 生成）：
+- **优先使用 `tools/page_api_index.json`**（由 `scan_page_api.py` 生成，纳入版本管理）：
   - 索引内 `by_path[pure_path]` 命中即视为已实现
   - 索引条目包含 `class`、`bases`，可判断方法是否来自父类
   - 索引缺失或生成时间超过 24 小时时，先执行 `scan_page_api.py` 刷新
@@ -318,6 +319,10 @@ AI 在 TodoWrite 首项必须显式记录方式编号与 5 项任务信息，例
   - 用例中按已有调用方式调用
 - 如果 URL 未实现：
   - 才新增方法
+  - **新增方法后必须同步更新 `tools/page_api_index.json`**，添加新接口条目，确保全局索引保持最新
+- **`tools/page_api_index.json` 支持两种更新方式**：
+  1. **扫描新增**：运行 `tools/scan_page_api.py` 自动扫描当前项目 page_api 目录并合并到索引
+  2. **AI 手动新增**：AI 编写新接口方法后，在索引 `methods` 数组中追加条目并在 `by_path` 中注册
 
 ### 4. 以真实返回为准
 
