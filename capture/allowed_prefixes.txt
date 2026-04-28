@@ -1,0 +1,7 @@
+/api/
+/sapi/
+/base/
+/papi/
+/ipconfigrec/
+/tenantlogo/
+/app/

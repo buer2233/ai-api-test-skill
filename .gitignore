@@ -1,0 +1,19 @@
+# 抓包运行时产物
+capture/latest.jsonl
+capture/latest.jsonl.*
+capture/*.log
+
+# 索引与选择草稿
+tools/page_api_index.json
+capture_selection.md
+
+# Python 缓存
+__pycache__/
+*.pyc
+*.pyo
+
+# Claude 本地配置
+.claude/
+
+# 临时文件
+temp_*.py
