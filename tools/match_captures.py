@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-r"""读取 api_test_dwp_temp/latest.jsonl + api_test_dwp_temp/page_api_index.json，
+r"""读取 api_test_dwp_temp/latest.jsonl + tools/page_api_index.json（全局），
 生成 api_test_dwp_temp/capture_selection.md 草稿供用户勾选。
 
 用法：
@@ -21,6 +21,10 @@ import sys
 from collections import OrderedDict
 from datetime import datetime
 from typing import List, Optional
+
+
+TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
+INDEX_PATH = os.path.join(TOOLS_DIR, "page_api_index.json")
 
 
 def _find_repo_root(start: str) -> Optional[str]:
@@ -214,11 +218,12 @@ def main():
     if not temp_dir:
         return 1
 
-    index_path = os.path.join(temp_dir, "page_api_index.json")
+    # 索引来自 skill 全局 tools/ 目录（纳入版本管理）
+    # 抓包数据与勾选草稿落在项目 api_test_dwp_temp/
     jsonl_path = args.jsonl or os.path.join(temp_dir, "latest.jsonl")
     out_md = args.out or os.path.join(temp_dir, "capture_selection.md")
 
-    index = _load_index(index_path)
+    index = _load_index(INDEX_PATH)
     if not index.get("methods"):
         print("WARN: page_api_index.json 为空或缺失，请先运行 scan_page_api.py", file=sys.stderr)
 
@@ -227,7 +232,7 @@ def main():
         print(f"WARN: 抓包数据为空 → {jsonl_path}", file=sys.stderr)
 
     records = _dedup_by_method_path(records)
-    content = _render(records, index, jsonl_path, index_path, repo_root)
+    content = _render(records, index, jsonl_path, INDEX_PATH, repo_root)
 
     with open(out_md, "w", encoding="utf-8") as f:
         f.write(content)
