@@ -321,6 +321,8 @@ Mermaid 源文件与导出 PNG 见 `flow_chart/` 目录。
 
 详见 [`high_frequency_experience.md`](./high_frequency_experience.md)（按需加载，不需每次加载 SKILL.md 时读取）
 
+Codex 用 `apply_patch` 时：Windows/中文路径下直接、小块、专用格式调用；警惕 BOM 匹配失败，shell 警告不等于失败。
+
 ## 输出结果模板
 
 完成任务后建议按以下结构输出：
