@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-r"""读取 api_test_dwp_temp/latest.jsonl + tools/page_api_index.json（全局），
+# Author: dengwanpeng
+
+r"""读取 api_test_dwp_temp/latest.jsonl + tools/page_api_index.sqlite3（全局），
 生成 api_test_dwp_temp/capture_selection.md 草稿供用户勾选。
 
 用法：
@@ -32,9 +34,11 @@ from utils.project_root import (  # noqa: E402
     resolve_project_root,
     get_temp_dir,
 )
+from utils.api_index_db import get_default_db_path, load_methods  # noqa: E402
+from utils.api_path_match import api_path_matches  # noqa: E402
 
 
-INDEX_PATH = os.path.join(TOOLS_DIR, "page_api_index.json")
+INDEX_DB_PATH = get_default_db_path(TOOLS_DIR)
 
 
 def _warn(msg: str) -> None:
@@ -57,20 +61,13 @@ def _get_temp_dir() -> str:
     return temp_dir
 
 
-def _load_index(index_path: str) -> dict:
-    if not os.path.isfile(index_path):
-        return {"methods": [], "by_path": {}}
-    with open(index_path, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-
 def _load_jsonl(path: str) -> List[dict]:
     if not os.path.isfile(path):
         return []
     records = []
     with open(path, "r", encoding="utf-8") as f:
         for line in f:
-            line = line.strip()
+            line = line.strip().lstrip("\ufeff")
             if not line:
                 continue
             try:
@@ -89,10 +86,24 @@ def _dedup_by_method_path(records: List[dict]) -> List[dict]:
     return list(bucket.values())
 
 
+def _display_path(path: str, repo_root: str) -> str:
+    try:
+        return os.path.relpath(path, repo_root).replace(os.sep, "/")
+    except ValueError:
+        return path.replace(os.sep, "/")
+
+
 def _find_impl(index: dict, pure_path: str):
     methods = index.get("methods", [])
-    ids = index.get("by_path", {}).get(pure_path, [])
-    return [methods[i] for i in ids if 0 <= i < len(methods)]
+    captured_method = (index.get("current_method") or "").upper()
+    matched = []
+    for item in methods:
+        covered_method = (item.get("http_method") or item.get("method") or "").upper()
+        if covered_method and captured_method and covered_method != captured_method:
+            continue
+        if api_path_matches(item.get("api_url") or item.get("pure_path") or "", pure_path):
+            matched.append(item)
+    return matched
 
 
 def _normalize_path_for_index(pure_path: str, repo_baseurl_tail: str = "") -> List[str]:
@@ -112,7 +123,7 @@ def _render(records: List[dict], index: dict, jsonl_path: str, index_path: str, 
     lines.append("")
     lines.append(f"- 生成时间：{now}")
     lines.append(f"- 抓包数据：`{os.path.relpath(jsonl_path, repo_root).replace(os.sep, '/')}`")
-    lines.append(f"- 索引来源：`{os.path.relpath(index_path, repo_root).replace(os.sep, '/')}`")
+    lines.append(f"- 索引来源：`{_display_path(index_path, repo_root)}`")
     lines.append(f"- 抓包条目：{len(records)} 条（已按 method+path 去重）")
     lines.append("")
     lines.append("## 使用说明")
@@ -137,6 +148,7 @@ def _render(records: List[dict], index: dict, jsonl_path: str, index_path: str, 
         if r.get("body_skipped"):
             special.append(r)
             continue
+        index["current_method"] = r.get("method", "")
         impls = _find_impl(index, r.get("pure_path", ""))
         if impls:
             normal_exist.append((r, impls))
@@ -172,7 +184,7 @@ def _render(records: List[dict], index: dict, jsonl_path: str, index_path: str, 
             lines.append(f"- [ ] **{i}. {r.get('method','?')} `{r.get('pure_path','?')}`**")
             for im in impls[:3]:
                 lines.append(
-                    f"  - 已实现：`{im['file']}` → `{im['class']}.{im['method']}` (line {im['line']})"
+                    f"  - 已实现：`{im['file']}` → `{im.get('class') or im.get('class_name')}.{im.get('api_name') or im.get('method')}` (line {im['line']})"
                 )
             if len(impls) > 3:
                 lines.append(f"  - 另有 {len(impls)-3} 处实现，详见索引")
@@ -208,6 +220,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--jsonl", default=None, help="抓包 JSONL 路径（默认 api_test_dwp_temp/latest.jsonl）")
     parser.add_argument("--out", default=None, help="输出草稿路径（默认 api_test_dwp_temp/capture_selection.md）")
+    parser.add_argument("--db", default=INDEX_DB_PATH, help="SQLite 索引路径（默认 tools/page_api_index.sqlite3）")
     args = parser.parse_args()
 
     repo_root = _resolve_repo_root()
@@ -224,16 +237,16 @@ def main():
     jsonl_path = args.jsonl or os.path.join(temp_dir, "latest.jsonl")
     out_md = args.out or os.path.join(temp_dir, "capture_selection.md")
 
-    index = _load_index(INDEX_PATH)
+    index = {"methods": load_methods(args.db)}
     if not index.get("methods"):
-        print("WARN: page_api_index.json 为空或缺失，请先运行 scan_page_api.py", file=sys.stderr)
+        print("WARN: page_api_index.sqlite3 为空或缺失，请先运行 scan_page_api.py", file=sys.stderr)
 
     records = _load_jsonl(jsonl_path)
     if not records:
         print(f"WARN: 抓包数据为空 → {jsonl_path}", file=sys.stderr)
 
     records = _dedup_by_method_path(records)
-    content = _render(records, index, jsonl_path, INDEX_PATH, repo_root)
+    content = _render(records, index, jsonl_path, args.db, repo_root)
 
     with open(out_md, "w", encoding="utf-8") as f:
         f.write(content)

@@ -1,4 +1,4 @@
-# api-test-dwp 执行流程图
+﻿# api-test-dwp 执行流程图
 
 本文件使用 [Mermaid](https://mermaid.js.org/) 绘制。VSCode / GitHub / Obsidian / Typora 等均可直接渲染。
 
@@ -93,9 +93,9 @@ flowchart TD
 | 步骤 | 动作 | 产物/输出 |
 |---|---|---|
 | 1 | 探测 12138 端口 | RUNNING / NOT_RUNNING / PORT_OCCUPIED |
-| 2 | 启动抓包 | `capture/latest.jsonl` 持续追加 |
-| 3 | 刷新索引 | `tools/page_api_index.json` |
-| 4 | 生成草稿 | `api-test-dwp/capture_selection.md` |
+| 2 | 启动抓包 | `api_test_dwp_temp/latest.jsonl` 持续追加 |
+| 3 | 刷新索引 | `tools/page_api_index.sqlite3` |
+| 4 | 生成草稿 | `api_test_dwp_temp/capture_selection.md` |
 | 5 | 等用户勾选 | `[x]/[ ]` 标记 |
 | 6 | 编写方法与用例 | 新方法写入 `[接口方法文件]`，新用例写入 `[接口用例文件]` |
 | 7 | pytest 闭环 | 执行日志 + 通过/失败统计 |
@@ -113,7 +113,7 @@ flowchart TD
     RefChk -- 是 --> Read1
 
     Read1[Read 参考用例全文<br/>+ 测试类头部]
-    Read1 --> Read2[查 page_api_index.json<br/>确认参考用例调用的方法位置]
+    Read1 --> Read2[查 page_api_index.sqlite3<br/>确认参考用例调用的方法位置]
     Read2 --> A3Chk{前置A='无新增接口'?}
 
     A3Chk -- 是 --> Skip[跳过接口查重]
@@ -284,3 +284,5 @@ flowchart LR
 - 本文件与 `SKILL.md` 保持**双向一致**：修改任一侧流程，另一侧必须同步
 - Mermaid 语法兼容性优先 GitHub 与 VSCode 的 Mermaid 插件
 - 如流程图需要导出为图片，推荐 [Mermaid Live Editor](https://mermaid.live/)
+
+

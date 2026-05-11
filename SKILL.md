@@ -1,4 +1,4 @@
----
+﻿---
 name: api-test-dwp
 description: 接口自动化通用 skill，通过 CWD 自动适配当前 test-automation 项目。用于在 `\test-automation\E10自动化\接口自动化测试` 中新增、修改、补齐、迁移接口测试方法与 pytest 用例，尤其适用于低代码平台 EB 页面相关接口。触发场景包括：新增接口方法、新增接口测试用例、补齐参数化、修复接口断言、按指定位置插入代码、按 URL 查重复实现、处理 UTF-8 中文编码、处理 PYTHONPATH/导入路径、执行 pytest 并根据真实报错循环修复直到通过。运行时产物统一放在当前项目 `api_test_dwp_temp/` 目录下。
 ---
@@ -166,7 +166,7 @@ AI 在 TodoWrite 首项必须显式记录方式编号与 5 项任务信息，例
 2. **读取参考上下文**：
    - Read 参考用例全文（docstring、fixture、断言风格）
    - Read 参考用例所属测试类头部（class 装饰器、`self.xxx = XxxAPI()` 的实例化）
-   - 查 `tools/page_api_index.json`（全局接口覆盖文档），确认参考用例调用的每个方法所在 `page_api` 文件
+   - 查 `tools/page_api_index.sqlite3`（全局接口覆盖文档），确认参考用例调用的每个方法所在 `page_api` 文件
 3. **接口查重**（仅当前置 A 不是"无新增接口"时执行）：
    - 从用户描述的业务改动点入手，判断是否真有新 URL 需要新增
    - 若没有真实新接口 → 提醒用户把 `[接口方法文件]/[接口方法位置]` 改为"当前用例无新增接口"后再继续
@@ -202,7 +202,7 @@ AI 在 TodoWrite 首项必须显式记录方式编号与 5 项任务信息，例
    - URL：提取 `pure_path`（剥 host、去 query）
    - 请求头：保留 Content-Type；Cookie 整体替换为用例内 `login_api_new` 返回的 ETEAMSID
    - 请求体：JSON → dict；`application/x-www-form-urlencoded` → 保留 str
-3. **接口查重**：以 `pure_path` 查 `tools/page_api_index.json`（全局接口覆盖文档）
+3. **接口查重**：以 `pure_path` 查 `tools/page_api_index.sqlite3`（全局接口覆盖文档）
    - 命中 → 直接复用已有方法
    - 未命中 → 按 `[接口方法文件]/[接口方法位置]` 新增
    - 若前置 A 是"当前用例无新增接口"但此处未命中 → **必须打回**，让用户二选一（改前置 A 或改用已有近似方法）
@@ -256,7 +256,7 @@ Mermaid 源文件与导出 PNG 见 `flow_chart/` 目录。
   - `tools/match_captures.py`（skill 内置工具）
   - `tools/check_capture_server.py`（skill 内置工具）
 - **全局接口覆盖文档**（纳入版本管理）：
-  - `tools/page_api_index.json` — 全局 URL 索引，扫描或 AI 新增接口后需更新
+  - `tools/page_api_index.sqlite3` — 全局 URL 索引，扫描或 AI 新增接口后需更新
 - **运行时产物**（位于当前项目 `api_test_dwp_temp/`）：
   - `latest.jsonl` — 抓包落盘
   - `capture_selection.md` — 勾选草稿
@@ -285,9 +285,9 @@ Mermaid 源文件与导出 PNG 见 `flow_chart/` 目录。
 ### 3. 先复用，后新增
 
 - 新增接口方法前，先按 **URL 的 pure_path** 搜索仓库内是否已有实现
-- **优先使用 `tools/page_api_index.json`**（由 `scan_page_api.py` 生成，纳入版本管理）：
-  - 索引内 `by_path[pure_path]` 命中即视为已实现
-  - 索引条目包含 `class`、`bases`，可判断方法是否来自父类
+- **优先使用 `tools/page_api_index.sqlite3`**（由 `scan_page_api.py` 生成，纳入版本管理）：
+  - 按 `api_url` + `method` 命中即视为已实现；路径含 `{1}` 等变量时按 `utils/api_path_match.py` 的规则匹配
+  - 索引条目包含 `api_name`、`api_desc`、`Author`、`Create Date`、`Update Date`、`method`、`class`、`bases`，可判断方法来源
   - 索引缺失或生成时间超过 24 小时时，先执行 `scan_page_api.py` 刷新
 - 索引不可用时回退到 grep 搜索，覆盖 `.format()` / `+` 拼接 / f-string 三种 URL 写法
 - 搜索范围不要只看当前文件，也要考虑父类、兄弟 API 文件、被当前测试类实例实际继承的 API 类
@@ -296,10 +296,10 @@ Mermaid 源文件与导出 PNG 见 `flow_chart/` 目录。
   - 用例中按已有调用方式调用
 - 如果 URL 未实现：
   - 才新增方法
-  - **新增方法后必须同步更新 `tools/page_api_index.json`**，添加新接口条目，确保全局索引保持最新
-- **`tools/page_api_index.json` 支持两种更新方式**：
-  1. **扫描新增**：运行 `tools/scan_page_api.py` 自动扫描当前项目 page_api 目录并合并到索引
-  2. **AI 手动新增**：AI 编写新接口方法后，在索引 `methods` 数组中追加条目并在 `by_path` 中注册
+  - **新增方法后必须同步更新 `tools/page_api_index.sqlite3`**，添加新接口条目，确保全局索引保持最新
+- **`tools/page_api_index.sqlite3` 更新方式**：
+  1. **扫描新增**：运行 `tools/scan_page_api.py` 自动扫描当前项目 page_api 目录并重建 SQLite 索引
+  2. **规则扩展**：遇到特殊 URL 写法时，优先在 `scan_page_api.py` 的 `URL_EXTRACT_RULES` 追加规则；遇到特殊对比方式时，在 `utils/api_path_match.py` 追加匹配规则
 
 ### 4. 以真实返回为准
 
@@ -378,3 +378,4 @@ pytest 执行命令
 - 输出新增接口用例/接口方法清单时，**默认不写文件位置、行号、路径等信息**，除非用户明确要求
 
 当你在当前仓库里做接口自动化编写时，把本文件视为**默认工作手册**。
+

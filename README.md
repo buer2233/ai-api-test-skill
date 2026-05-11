@@ -1,4 +1,4 @@
-# api-test-dwp
+﻿# api-test-dwp
 
 面向 `test-automation` 仓库的**接口自动化编写 Skill**，提供三种编写方式。
 AI 执行规范详见 [`SKILL.md`](./SKILL.md)，完整流程图详见 [`flow_chart/flow.md`](./flow_chart/flow.md)。
@@ -82,9 +82,11 @@ api-test-dwp/
 │   ├── scan_page_api.py          # 扫描 page_api 生成索引
 │   ├── match_captures.py         # 抓包 vs 索引 → 勾选草稿
 │   ├── check_capture_server.py   # 检测 12138 抓包服务器状态
-│   └── page_api_index.json       # 全局接口覆盖文档（纳入版本管理）
+│   └── page_api_index.sqlite3    # SQLite 全局接口覆盖文档（纳入版本管理）
 ├── utils/                        # 多模块共用的基础函数（复用规则见 CLAUDE.md / AGENTS.md）
-│   └── project_root.py           # 项目根定位 + config.json 解析
+│   ├── project_root.py           # 项目根定位 + config.json 解析
+│   ├── api_index_db.py           # SQLite 索引读写
+│   └── api_path_match.py         # 抓包路径匹配规则
 └── config.json                   # 运行时配置（AI 写入 project_path）
 ```
 
@@ -114,3 +116,4 @@ api-test-dwp/
 | [`flow_chart/flow.md`](./flow_chart/flow.md) | 完整流程图（Mermaid 源码，含决策树与三方式对比） |
 | [`capture/README.md`](./capture/README.md) | 抓包配置细节（证书安装、代理设置、过滤规则） |
 | [`high_frequency_experience.md`](./high_frequency_experience.md) | 高频踩坑经验（按需查阅） |
+
