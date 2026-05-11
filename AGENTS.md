@@ -72,6 +72,7 @@
 # 抓包服务（mitmproxy 监听 12138）—— 方式①使用
 capture/start.bat                     # 启动（前台）
 capture/stop.bat                      # 停止
+capture/restart.bat                   # 停止 12138 后等待 1 秒并重启
 python tools/check_capture_server.py  # 退出码 0=RUNNING、1=NOT_RUNNING、2=PORT_OCCUPIED
 
 # 扫描全局 page_api URL（写入 tools/page_api_index.sqlite3）
@@ -122,6 +123,7 @@ api-test-dwp/
 │   ├── README.md                 # 抓包配置详细指引（证书安装等）
 │   ├── start.bat                 # 一键启动 12138
 │   ├── stop.bat                  # 停止 12138 进程
+│   ├── restart.bat               # 停止 12138 后等待 1 秒并重启
 │   ├── capture_addon.py          # mitmdump 插件（过滤 + 落盘 JSONL）
 │   └── allowed_prefixes.txt      # 用户可扩展的 URL 过滤前缀
 ├── tools/                        # 索引与匹配工具（三方式共用）
@@ -131,9 +133,10 @@ api-test-dwp/
 │   └── page_api_index.sqlite3    # SQLite 全局接口覆盖文档（纳入版本管理）
 ├── utils/                        # 多模块共用的基础函数（复用规则见 CLAUDE.md / AGENTS.md）
 │   ├── project_root.py           # 项目根定位 + config.json 解析
+│   ├── common_function.py        # 通用配置更新等共享方法
 │   ├── api_index_db.py           # SQLite 索引读写
 │   └── api_path_match.py         # 抓包路径匹配规则
-└── config.json                   # 运行时配置（AI 写入 project_path）
+└── config.json                   # 运行时配置（AI 写入 project_path / baseurl）
 ```
 
 ## 其它需要准备的规则

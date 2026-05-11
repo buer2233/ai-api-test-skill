@@ -33,6 +33,7 @@ if _SKILL_ROOT not in sys.path:
 
 from mitmproxy import ctx, http  # noqa: E402
 
+from utils.common_function import update_skill_config  # noqa: E402
 from utils.project_root import (  # noqa: E402
     DEFAULT_CONFIG_PATH,
     resolve_project_root,
@@ -142,6 +143,18 @@ def _parse_baseurl_from_config(config_path: str) -> Optional[str]:
     return None
 
 
+def _save_baseurl_to_skill_config(baseurl: str) -> None:
+    """将当前抓包使用的 baseurl 同步到 skill 根目录 config.json。"""
+    if not baseurl:
+        return
+    update_skill_config(
+        {"baseurl": baseurl},
+        config_path=DEFAULT_CONFIG_PATH,
+        on_warn=_warn,
+        on_info=_info,
+    )
+
+
 def _load_baseurl() -> str:
     repo_root = _resolve_repo_root()
     if not repo_root:
@@ -155,7 +168,9 @@ def _load_baseurl() -> str:
     if not baseurl:
         ctx.log.warn("[api-test-dwp] AST 解析 baseurl 未命中，使用空串（不做 host 过滤）")
         return ""
-    return baseurl.strip()
+    baseurl = baseurl.strip()
+    _save_baseurl_to_skill_config(baseurl)
+    return baseurl
 
 
 def _load_prefixes() -> List[str]:
@@ -224,9 +239,9 @@ class ApiCaptureAddon:
         self.prefixes = _load_prefixes()
         self.jsonl_path = _get_jsonl_path()
         self._ensure_jsonl()
-        ctx.log.info(f"[api-test-dwp] baseurl={self.baseurl or '<empty>'}")
-        ctx.log.info(f"[api-test-dwp] prefixes={self.prefixes}")
-        ctx.log.info(f"[api-test-dwp] output={self.jsonl_path}")
+        ctx.log.info(f"[api-test-dwp] self.baseurl = {self.baseurl or '<empty>'}")
+        ctx.log.info(f"[api-test-dwp] self.prefixes = {self.prefixes}")
+        ctx.log.info(f"[api-test-dwp] self.jsonl_path = {self.jsonl_path}")
 
     def _ensure_jsonl(self):
         if not os.path.isfile(self.jsonl_path):

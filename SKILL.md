@@ -59,7 +59,7 @@ AI 校验发现缺项时，照抄以下模板返回：
 - 示例：`[接口用例文件] = D:/workSpace_001/test-automation/E10自动化/接口自动化测试/test_case/.../xxx.py`
 - 提取结果：`project_path = D:/workSpace_001/test-automation`
 
-**写入文件**：`<skill 根目录>/config.json`，结构如下（保持其他字段不变，仅覆盖 `project_path`）：
+**写入文件**：`<skill 根目录>/config.json`，通过 `utils/common_function.py` 的 `update_skill_config(update_config: dict)` 更新配置；调用时传入 `{"project_path": project_path}`，函数内部会保持其他字段不变并执行 `config_data.update(update_config)`。
 
 ```json
 { "project_path": "D:/workSpace_001/test-automation" }

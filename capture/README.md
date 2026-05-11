@@ -40,13 +40,14 @@ mitmdump -s capture_addon.py --listen-port 12138
 ### 2.2 看到以下日志表示成功
 
 ```
-[api-test-dwp] baseurl=weapp.mulinquan.cn
-[api-test-dwp] prefixes=['/api/', '/sapi/', ...]
-[api-test-dwp] output=...\api_test_dwp_temp\latest.jsonl
+[api-test-dwp] self.baseurl = weapp.mulinquan.cn
+[api-test-dwp] self.prefixes = ['/api/', '/sapi/', ...]
+[api-test-dwp] self.jsonl_path = ...\api_test_dwp_temp\latest.jsonl
 Proxy server listening at *:12138
 ```
 
-**如果 `baseurl=<empty>`**：说明没找到 `E10自动化/接口自动化测试/config.py`，或其 `RunConfig.baseurl` 被注释。请手动打开 config.py 确认当前启用的 baseurl 没被井号注释。
+**如果 `self.baseurl = <empty>`**：说明没找到 `E10自动化/接口自动化测试/config.py`，或其 `RunConfig.baseurl` 被注释。请手动打开 config.py 确认当前启用的 baseurl 没被井号注释。
+启动成功后，addon 会通过 `utils/common_function.py` 的通用配置更新方法，把当前解析到的 `RunConfig.baseurl` 同步写入 skill 根目录 `config.json` 的 `baseurl` 字段，便于后续工具读取当前抓包环境。
 
 ## 3. 安装 CA 证书（关键一步）
 
@@ -123,7 +124,9 @@ AI 会：
 1. 运行 `tools/check_capture_server.py` 检查 12138
 2. 未启动则调用 `start.bat`
 3. 启动后等待端口 LISTENING
-4. 告诉你"抓包已就绪，请在浏览器操作"
+4. 告诉你抓包服务的 `self.baseurl`、`self.prefixes`、`self.jsonl_path`，以及"抓包已就绪，请在浏览器操作"
+
+如需强制清理旧进程并重启，直接对 AI 说“重启抓包服务”。AI 会执行 `capture/restart.bat`：先停止 `12138` 端口进程，等待 1 秒，再重新启动 `capture_addon.py`。
 
 **AI 无法代劳的两步**（GUI 操作）：
 - 双击证书完成 Windows 信任弹窗
@@ -139,7 +142,7 @@ AI 会：
 
 如需新增，编辑 `allowed_prefixes.txt`，每行一个。
 
-**修改后要重启 mitmdump**（Ctrl+C 停止后重新运行 start.bat）。
+**修改后要重启 mitmdump**（推荐运行 `restart.bat`，或 Ctrl+C 停止后重新运行 `start.bat`）。
 
 ## 8. 停止抓包
 

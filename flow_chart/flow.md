@@ -61,17 +61,21 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    F1Start([方式1 入口]) --> Chk[check_capture_server.py]
+    F1Start([方式1 入口]) --> NeedRestart{用户提及<br/>重启抓包服务?}
+    NeedRestart -->|是| Restart[restart.bat<br/>停止 12138<br/>等 1 秒后重启]
+    NeedRestart -->|否| Chk[check_capture_server.py]
+    Restart --> ServiceInfo[返回 self.baseurl<br/>self.prefixes<br/>self.jsonl_path]
     Chk -->|RUNNING exit=0| UI
     Chk -->|NOT_RUNNING exit=1| Start1[后台启动<br/>start.bat]
     Start1 --> Wait1[等 2 秒]
     Wait1 --> ReChk[再次检测]
-    ReChk -->|RUNNING| UI
+    ReChk -->|RUNNING| ServiceInfo
     ReChk -->|仍失败| Manual[提示用户<br/>手动双击 start.bat]
     Manual --> F1End([终止])
     Chk -->|PORT_OCCUPIED exit=2| Stop[询问是否运行<br/>stop.bat 释放]
     Stop --> Chk
 
+    ServiceInfo --> UI
     UI[提示用户操作 UI<br/>浏览器代理 127.0.0.1:12138<br/>完成后回复 '继续']
     UI --> UserOp[用户完成 UI 操作]
     UserOp --> Scan[scan_page_api.py<br/>增量/全量刷新索引]
@@ -94,13 +98,14 @@ flowchart TD
 
 | 步骤 | 动作 | 产物/输出 |
 |---|---|---|
-| 1 | 探测 12138 端口 | RUNNING / NOT_RUNNING / PORT_OCCUPIED |
-| 2 | 启动抓包 | `api_test_dwp_temp/latest.jsonl` 持续追加 |
-| 3 | 刷新索引 | `tools/page_api_index.sqlite3` |
-| 4 | 生成草稿 | `api_test_dwp_temp/capture_selection.md` |
-| 5 | 等用户勾选 | `[x]/[ ]` 标记 |
-| 6 | 编写方法与用例 | 新方法写入 `[接口方法文件]`，新用例写入 `[接口用例文件]` |
-| 7 | pytest 闭环 | 执行日志 + 通过/失败统计 |
+| 1 | 判断是否需要重启 | 用户是否明确提及重启抓包服务 |
+| 2 | 二选一处理抓包服务 | 重启：`restart.bat`；未重启：检查端口并按需 `start.bat` |
+| 3 | 返回服务信息 | `self.baseurl` / `self.prefixes` / `self.jsonl_path` |
+| 4 | 刷新索引 | `tools/page_api_index.sqlite3` |
+| 5 | 生成草稿 | `api_test_dwp_temp/capture_selection.md` |
+| 6 | 等用户勾选 | `[x]/[ ]` 标记 |
+| 7 | 编写方法与用例 | 新方法写入 `[接口方法文件]`，新用例写入 `[接口用例文件]` |
+| 8 | pytest 闭环 | 执行日志 + 通过/失败统计 |
 
 ---
 
