@@ -23,11 +23,37 @@ import time
 from datetime import datetime
 from typing import List, Optional
 
-from mitmproxy import ctx, http
-
 
 ADDON_DIR = os.path.dirname(os.path.abspath(__file__))
+_SKILL_ROOT = os.path.dirname(ADDON_DIR)
+if _SKILL_ROOT not in sys.path:
+    sys.path.insert(0, _SKILL_ROOT)
+
+from mitmproxy import ctx, http  # noqa: E402
+
+from utils.project_root import (  # noqa: E402
+    DEFAULT_CONFIG_PATH,
+    resolve_project_root,
+)
+
+
 PREFIX_FILE = os.path.join(ADDON_DIR, "allowed_prefixes.txt")
+
+
+def _warn(msg: str) -> None:
+    ctx.log.warn(f"[api-test-dwp] {msg}")
+
+
+def _info(msg: str) -> None:
+    ctx.log.info(f"[api-test-dwp] {msg}")
+
+
+def _resolve_repo_root() -> Optional[str]:
+    return resolve_project_root(
+        config_path=DEFAULT_CONFIG_PATH,
+        on_warn=_warn,
+        on_info=_info,
+    )
 
 DEFAULT_PREFIXES = [
     "/api/",
@@ -79,28 +105,11 @@ MAX_BODY_BYTES = 1024 * 1024  # 1MB
 
 
 # -------------------- 仓库根与临时目录 --------------------
-
-def _find_repo_root(start: str) -> Optional[str]:
-    """从 start 向上找到含有 'E10自动化' 子目录的仓库根。"""
-    cur = start
-    for _ in range(10):
-        if os.path.isdir(os.path.join(cur, "E10自动化")):
-            return cur
-        parent = os.path.dirname(cur)
-        if parent == cur:
-            return None
-        cur = parent
-    return None
-
-
-def _find_project_root() -> Optional[str]:
-    """从当前工作目录向上查找 test-automation 项目根。"""
-    return _find_repo_root(os.getcwd())
-
+# 项目根定位与 config.json 解析统一抽到 utils.project_root，本文件不再保留副本。
 
 def _get_jsonl_path() -> str:
     """返回捕获 JSONL 的落地路径，确保 api_test_dwp_temp 目录存在。"""
-    repo_root = _find_project_root()
+    repo_root = _resolve_repo_root()
     if not repo_root:
         # 无法定位项目根时回退到 skill 目录
         return os.path.join(ADDON_DIR, "latest.jsonl")
@@ -132,9 +141,9 @@ def _parse_baseurl_from_config(config_path: str) -> Optional[str]:
 
 
 def _load_baseurl() -> str:
-    repo_root = _find_project_root()
+    repo_root = _resolve_repo_root()
     if not repo_root:
-        ctx.log.warn("[api-test-dwp] 未找到仓库根（含 E10自动化 目录），请确认当前工作目录在 test-automation 项目内")
+        _warn("未找到仓库根（含 E10自动化 目录），请确认当前工作目录在 test-automation 项目内，或在 skill 根目录 config.json 中配置 project_path")
         return ""
     config_path = os.path.join(repo_root, "E10自动化", "接口自动化测试", "config.py")
     if not os.path.isfile(config_path):

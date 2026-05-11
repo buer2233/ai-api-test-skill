@@ -40,24 +40,22 @@ from typing import List, Optional
 
 
 TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
+_SKILL_ROOT = os.path.dirname(TOOLS_DIR)
+if _SKILL_ROOT not in sys.path:
+    sys.path.insert(0, _SKILL_ROOT)
+
+from utils.project_root import resolve_project_root  # noqa: E402
+
+
 INDEX_PATH = os.path.join(TOOLS_DIR, "page_api_index.json")
 
 
-def _find_repo_root(start: str) -> Optional[str]:
-    cur = start
-    for _ in range(10):
-        if os.path.isdir(os.path.join(cur, "E10自动化")):
-            return cur
-        parent = os.path.dirname(cur)
-        if parent == cur:
-            return None
-        cur = parent
-    return None
+def _warn(msg: str) -> None:
+    print(f"WARN: {msg}", file=sys.stderr)
 
 
-def _find_project_root() -> Optional[str]:
-    """从当前工作目录向上查找 test-automation 项目根。"""
-    return _find_repo_root(os.getcwd())
+def _resolve_repo_root() -> Optional[str]:
+    return resolve_project_root(on_warn=_warn)
 
 
 URL_PATTERNS = [
@@ -154,9 +152,9 @@ def main():
     parser.add_argument("--full", action="store_true", help="全量扫描，忽略 mtime 缓存")
     args = parser.parse_args()
 
-    repo_root = _find_project_root()
+    repo_root = _resolve_repo_root()
     if not repo_root:
-        print("ERROR: 未找到仓库根（含 E10自动化 目录），请确认当前工作目录在 test-automation 项目内", file=sys.stderr)
+        print("ERROR: 未找到仓库根（含 E10自动化 目录），请确认当前工作目录在 test-automation 项目内，或在 skill 根目录 config.json 中配置 project_path", file=sys.stderr)
         return 1
 
     pages_api_root = os.path.join(

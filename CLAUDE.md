@@ -24,15 +24,36 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 避免在多个文档间复制策略。这种拆分的目的就是让 `SKILL.md` 保持每次会话固定加载、其余按需拉取。
 
-## CWD 自适应架构（最不显眼的要点）
+## 项目根定位架构（最不显眼的要点）
 
-本 skill 是**全局安装**，但作用于**用户当前所在的消费方项目**。机制有两处：
+本 skill 是**全局安装**，但作用于**用户当前所在的消费方项目**。定位项目根采用**两段式**策略，全部封装在 `utils/project_root.py`，被 `capture/capture_addon.py`、`tools/match_captures.py`、`tools/scan_page_api.py` 复用：
 
-- `tools/scan_page_api.py:46` 与 `tools/match_captures.py:30` 都定义了 `_find_repo_root(start)`，向上**最多回溯 10 层父目录**，查找名为 `E10自动化` 的子目录。这是工具无视 skill 自身位置、能精确定位消费方测试仓的方式。
-- 运行时产物（抓包产生的 `latest.jsonl`、match 产生的 `capture_selection.md`）写入**消费方项目**的 `api_test_dwp_temp/`，**绝不**写入 skill 自身目录。`capture/` 内的旧产物路径与根目录的 `capture_selection.md` 都是历史残留，已纳入 `.gitignore`。
+1. **优先读 `config.json` 的 `project_path` 字段**（严格 5 条校验：存在 / 解析成功 / 非空 / 绝对路径 / 真实目录 / 含 `E10自动化` 子目录），命中即作为 `repo_root`。AI 在前置 A 校验通过时会写入该字段，详见 `SKILL.md` 「校验通过后立即固化项目根」。
+2. **fallback 到 CWD 向上搜索** `E10自动化` 子目录（最多 10 层）。`utils.project_root.find_repo_root` 实现该逻辑。
+
+剩余两条仍然成立：
+
+- 运行时产物（抓包产生的 `latest.jsonl`、match 产生的 `capture_selection.md`）写入**消费方项目**的 `api_test_dwp_temp/`，**绝不**写入 skill 自身目录。
 - 与之相反，`tools/page_api_index.json` **纳入 skill 版本管理**——它是全局的"URL → 方法"覆盖索引。`scan_page_api.py`（扫描）与 AI 手工编辑（新增方法后追加条目）都会更新它。
 
-排查"工具找不到文件"问题时，第一步先确认当前 CWD 处在某个含有 `E10自动化` 子目录的树中。
+排查"工具找不到文件"问题时，先检查 `config.json` 的 `project_path` 是否正确；其次再看 CWD 是否处在含 `E10自动化` 子目录的树中。
+
+## 复用代码必须放在 utils/（硬规则）
+
+**任何被两个及以上模块复用的基础函数 / 常量 / 工具类，统一放在 `utils/` 下，不得在调用方文件内复制粘贴**。这条规则覆盖：
+
+- 跨模块共用的纯函数（如项目根定位、路径规范化、URL 解析等）
+- 跨模块共用的配置常量（如 `REPO_MARKER = "E10自动化"`、`TEMP_DIR_NAME = "api_test_dwp_temp"`）
+- 与运行时环境无关的解析 / 校验逻辑
+
+当你发现某段逻辑要在第二处使用时：
+
+1. 立刻把它抽进 `utils/` 下合适的模块（按职责命名，如 `utils/project_root.py`、`utils/url_parse.py`），**不要在新位置复制一份**。
+2. 调用方通过 `sys.path.insert(0, _SKILL_ROOT)` + `from utils.xxx import yyy` 引用——`_SKILL_ROOT` 由 `os.path.abspath(__file__)` 向上推算两层，**不要依赖 CWD**。
+3. 涉及日志输出的工具函数（如读 config 失败时的 warn），通过 **callback 注入**（`on_warn` / `on_info` 参数）解耦——utils 本身不依赖 `mitmproxy.ctx.log` 或 `print(sys.stderr)`，由调用方各自传 lambda 适配。
+4. 不在 utils 内引入任何重量级第三方依赖；只用标准库 + 项目已直接依赖的库。
+
+发现仓库内现有重复实现却没放进 utils 的，按上述规则补救。
 
 ## 任何编写工作前的两道强制门禁
 
@@ -81,9 +102,14 @@ python tools/match_captures.py --jsonl path/to/latest.jsonl
 ```
 SKILL.md                         AI 执行规范（每次会话必加载）
 README.md                        用户快速指南
+AGENTS.md                        Agent 协作守则
+CLAUDE.md                        本文件（仓库导览）
 coding_style_guide.md            接口方法/用例编码规范（按需加载）
 high_frequency_experience.md     高频踩坑经验（按需加载）
+config.json                      运行时配置（AI 在前置 A 通过后写入 project_path）
 flow_chart/flow.md + *.png       Mermaid 源码与 6 张子流程图
+utils/
+  project_root.py                项目根定位 + config.json 解析（多模块共用）
 tools/
   scan_page_api.py               AST 解析消费方仓库，构建 page_api_index.json
   match_captures.py              将 latest.jsonl 与索引比对
