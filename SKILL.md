@@ -1,6 +1,6 @@
-﻿---
+---
 name: api-test-dwp
-description: 接口自动化通用 skill，通过 CWD 自动适配当前 test-automation 项目。用于在 `\test-automation\E10自动化\接口自动化测试` 中新增、修改、补齐、迁移接口测试方法与 pytest 用例，尤其适用于低代码平台 EB 页面相关接口。触发场景包括：新增接口方法、新增接口测试用例、补齐参数化、修复接口断言、按指定位置插入代码、按 URL 查重复实现、处理 UTF-8 中文编码、处理 PYTHONPATH/导入路径、执行 pytest 并根据真实报错循环修复直到通过。运行时产物统一放在当前项目 `api_test_dwp_temp/` 目录下。
+description: 接口自动化通用 skill，通过 CWD 自动适配当前 test-automation 项目。用于在 `\test-automation\E10自动化\接口自动化测试` 中新增、修改、补齐、迁移接口测试方法与 pytest 用例。触发场景包括：新增接口方法、新增接口测试用例、补齐参数化、修复接口断言、按指定位置插入代码、按 URL 查重复实现、处理 UTF-8 中文编码、执行 pytest 并根据真实报错循环修复直到通过。运行时产物统一放在当前项目 `api_test_dwp_temp/` 目录下。
 ---
 
 # api-test-dwp
@@ -119,123 +119,37 @@ AI 在 TodoWrite 首项必须显式记录方式编号与 5 项任务信息，例
 
 ## 三种用例编写方式的执行流程
 
-### ① 方式1：抓包驱动（推荐）
+### 强制按需读取门禁
 
-**触发条件**：前置 B 选择 ①，或用户明确表达"用抓包/读 latest.jsonl/已完成 UI 操作"。
+进入任一种方式后，AI **必须先 Read 对应的方案文件**，再继续编写接口方法或用例：
 
-**执行步骤**：
+| 方式 | 适用场景 | 必读方案文件 |
+|---|---|---|
+| ① 抓包驱动 | 用户选择方式1，或表达“用抓包 / 读 latest.jsonl / 已完成 UI 操作” | `doc/mode_capture_driven.md` |
+| ② 参考已有用例 | 用户选择方式2，或表达“参照 / 仿照 / 复制已有用例” | `doc/mode_reference_case.md` |
+| ③ cURL 手工 | 用户选择方式3，或消息中已粘贴 `curl ...` | `doc/mode_curl_manual.md` |
 
-1. **检查抓包服务器状态**：执行 `tools/check_capture_server.py`，退出码解释：
-   ```
-   RUNNING (exit=0)        → 进入步骤 2
-   NOT_RUNNING (exit=1)    → 后台启动 start.bat：
-                             start /B cmd /c "capture\start.bat"
-                             或直接：mitmdump -s capture/capture_addon.py --listen-port 12138
-                             启动后等待 2 秒再次检测，仍失败 → 提示用户手动双击
-   PORT_OCCUPIED (exit=2)  → 提示用户 12138 被非 mitmdump 进程占用，是否运行 stop.bat 释放
-   ```
-2. **提示用户操作 UI**：浏览器代理 `127.0.0.1:12138`；证书已装"本地计算机 → 受信任的根证书颁发机构"；完成 UI 操作后回复"继续"
-3. **生成/刷新索引**：执行 `tools/scan_page_api.py`（默认增量，索引超 24 小时自动全量）
-4. **生成勾选草稿**：执行 `tools/match_captures.py` → `api_test_dwp_temp/capture_selection.md`
-   - **"新接口"**：默认 `[x]`
-   - **"已实现接口"**：默认 `[ ]`（如需重跑手勾）
-   - **"特殊处理接口"** (`body_skipped=true`)：默认 `[ ]` + ⚠️
-   - **"登录/登出接口"**：仅展示，默认不入
-5. **等待用户勾选**：AI 必须停下，**不得擅自续跑**
-6. **读勾选结果 → 编写**：
-   - 新接口落点：按 `pure_path` 前缀推荐并校验前置 A 中的 `[接口方法文件]`，冲突时反问用户
-   - 若前置 A 是"当前用例无新增接口"，而草稿里仍有新接口 `[x]`：**必须打回**，让用户二选一（改前置 A 或取消勾选新接口）
-   - 已实现接口复用索引方法
-   - 登录/二进制接口默认不入例
-7. **⚠️ 执行 pytest 直到通过（强制步骤，不得跳过）**（要求见「核心原则 → 5. 测试必须闭环」）
+**硬性要求**：
+- 编写任何接口方法或 pytest 用例前，必须先 Read `doc/coding_style_guide.md`。
+- 选定方式后，必须 Read 上表对应的 `doc/mode_*.md`，并按其中步骤执行。
+- 需要排查历史高频问题时，按需 Read `doc/high_frequency_experience.md`。
+- 不允许只凭 `SKILL.md` 的摘要执行三种方式的具体步骤。
 
----
+### 三种方式共用规范
 
-### ② 方式2：参考已有用例（推荐）
+三种方式在以下环节共用，不在 `SKILL.md` 中重复展开：
 
-**触发条件**：前置 B 选择 ②，或用户明确表达"参照/仿照/复制已有用例"。
-
-**执行步骤**：
-
-1. **锁定参考样本**：用户必须提供参考用例的**具体函数名或文件路径**
-   - 缺失 → AI 反问：`请指定参考样本：<文件相对路径>::<test_函数名>；或描述同类用例特征（如：ebuilder 柱图数据源类的最后一条用例）`
-   - 参考样本可以是：
-     - 单个函数（最精准）
-     - 同一个测试类内"最后 N 个用例"
-     - 同一个目录下"风格最一致的某个文件"
-2. **读取参考上下文**：
-   - Read 参考用例全文（docstring、fixture、断言风格）
-   - Read 参考用例所属测试类头部（class 装饰器、`self.xxx = XxxAPI()` 的实例化）
-   - 查 `tools/page_api_index.sqlite3`（全局接口覆盖文档），确认参考用例调用的每个方法所在 `page_api` 文件
-3. **接口查重**（仅当前置 A 不是"无新增接口"时执行）：
-   - 从用户描述的业务改动点入手，判断是否真有新 URL 需要新增
-   - 若没有真实新接口 → 提醒用户把 `[接口方法文件]/[接口方法位置]` 改为"当前用例无新增接口"后再继续
-4. **仿写用例**：
-   - **复用参考用例的步骤骨架**：前置取数 → 初始化 → 保存 → 预览 → 断言
-   - **复用参数化结构**：`@pytest.mark.parametrize` 的字段列表、ids 格式保持一致
-   - **复用断言风格**：`assert len(...)==`、`assert isinstance(..., list)`、`assert "xxx" in ...` 等
-   - **只替换业务语义不同的片段**：payload 关键字段、预期数据、用例名
-   - **沿用 `self.xxx` 实例名与调用方式**，不引入新实例
-   - 用例 docstring 使用 `[用例名]` 的完整中文
-5. **⚠️ 执行 pytest 直到通过（强制步骤，不得跳过）**（要求见「核心原则 → 5. 测试必须闭环」）
-
-**关键原则**：
-- 不主动扩展参考用例没有的能力（例：参考没写分组，就不给新用例加分组）
-- 不把简化的参考改成复杂版本
-- 若参考用例本身有 `@pytest.mark.skip`，新用例默认不挂 skip，除非用户声明"先写占位"
-- 不引入参考用例没有的 API 实例（沿用参考用例已有的 `self.xxx`）
-- 不修改参考用例本身（除非用户明确要求）
-- **pytest 闭环为强制步骤**：仿写完成后必须执行 pytest，不得以"代码已写好"为理由跳过
-
----
-
-### ③ 方式3：cURL 手工（补充）
-
-**触发条件**：前置 B 选择 ③，或用户消息中已粘贴 `curl ...` 命令。
-
-**执行步骤**：
-
-1. **收齐 cURL 与响应**：AI 必须确认每个待写接口都有成对的 **cURL 命令 + 真实响应体**
-   - 缺失任一 → 反问用户："接口 `<短描述>` 缺 cURL 或响应，请补齐"
-2. **解析 cURL**（按先后顺序一一落位）：
-   - 方法：GET/POST/PUT/DELETE
-   - URL：提取 `pure_path`（剥 host、去 query）
-   - 请求头：保留 Content-Type；Cookie 整体替换为用例内 `login_api_new` 返回的 ETEAMSID
-   - 请求体：JSON → dict；`application/x-www-form-urlencoded` → 保留 str
-3. **接口查重**：以 `pure_path` 查 `tools/page_api_index.sqlite3`（全局接口覆盖文档）
-   - 命中 → 直接复用已有方法
-   - 未命中 → 按 `[接口方法文件]/[接口方法位置]` 新增
-   - 若前置 A 是"当前用例无新增接口"但此处未命中 → **必须打回**，让用户二选一（改前置 A 或改用已有近似方法）
-4. **断言来自响应**：直接基于用户提供的响应体做断言
-   - `code` 断言
-   - 关键字段存在性断言
-   - 有排序/过滤时，优先用明确的预期值列表
-   - 禁止凭空猜测返回结构
-5. **按 cURL 先后顺序组装用例**：每条 cURL 对应一个用例步骤（`# 1. ... # 2. ...`）
-6. **⚠️ 执行 pytest 直到通过（强制步骤，不得跳过）**（要求见「核心原则 → 5. 测试必须闭环」）
-
-**关键原则**：
-- cURL 里的 ETEAMSID / token 不直接硬编码到用例，改用登录 fixture 动态获取
-- cURL 里的 `timestamp`、`_t` 等时效性参数不保留原值，改为调用时动态生成
-- cURL 中的 `Referer`、`User-Agent` 等非必需头不写入接口方法，保持方法体精简
-
----
-
-### 三种方式的共用规范
-
-三种方式在以下环节共用，不重复展开：
-
-- **接口方法/用例风格**：见 [`coding_style_guide.md`](./coding_style_guide.md)（**编写前必须 Read 并严格遵守**）
-- **失败排查**：见「失败排查优先级」
-- **pytest 闭环**：见「核心原则 → 5. 测试必须闭环」
+- **接口方法/用例风格**：见 `doc/coding_style_guide.md`（编写前必须 Read 并严格遵守）。
+- **失败排查**：见“失败排查优先级”，必要时读 `doc/high_frequency_experience.md`。
+- **pytest 闭环**：见“核心原则 → 5. 测试必须闭环”。
 
 **三种方式共用的前置确认动作**（进入任一种方式前执行）：
 
-- Read `[接口用例文件]`，按 `[接口用例位置]` 定位插入点上下文
-- 若 `[接口方法文件]` 非"无新增接口"：Read 该文件，按 `[接口方法位置]` 定位插入点
-- 检查插入点是否紧邻 `@pytest.mark.skip`
-- 检查测试类前置依赖、fixture、`self.xxx` 真实实例化
-- 用 `[用例名]` 作为新增用例的 docstring / 标题文本
+- Read `[接口用例文件]`，按 `[接口用例位置]` 定位插入点上下文。
+- 若 `[接口方法文件]` 非“无新增接口”：Read 该文件，按 `[接口方法位置]` 定位插入点。
+- 检查插入点是否紧邻 `@pytest.mark.skip`。
+- 检查测试类前置依赖、fixture、`self.xxx` 真实实例化。
+- 用 `[用例名]` 作为新增用例的 docstring / 标题文本。
 
 ### 流程图
 
@@ -245,10 +159,8 @@ Mermaid 源文件与导出 PNG 见 `flow_chart/` 目录。
 
 编写接口自动化时，优先以以下文件为第一参考。**这里是风格模板，不是功能强绑定模板**：
 
-- **接口用例规范锚点**：
-  - `\test-automation\E10自动化\接口自动化测试\test_case\test_eBuilder_case\test_ebuilder_page_case\test_ebuilder_page_coms_dataDisplay2_api_PC\test_ebuilder_page_coms_dataDisplay2_new2_api_PC.py`
-- **接口方法规范锚点**：
-  - `\test-automation\E10自动化\接口自动化测试\test_case\page_api\eBuilder\ebuilder_page_new1_api.py`
+- **接口用例和接口方法规范锚点**：
+  - `doc/coding_style_guide.md`（skill 内的全部标准规范模板样式）
 - **抓包底座**：
   - `capture/capture_addon.py`（skill 内置工具）
 - **索引与匹配工具**：
@@ -296,7 +208,7 @@ Mermaid 源文件与导出 PNG 见 `flow_chart/` 目录。
   - 用例中按已有调用方式调用
 - 如果 URL 未实现：
   - 才新增方法
-  - **新增方法后必须同步更新 `tools/page_api_index.sqlite3`**，添加新接口条目，确保全局索引保持最新
+  - **新增方法后必须同步运行 `tools/scan_page_api.py` 刷新 `tools/page_api_index.sqlite3`**，确保全局索引保持最新
 - **`tools/page_api_index.sqlite3` 更新方式**：
   1. **扫描新增**：运行 `tools/scan_page_api.py` 自动扫描当前项目 page_api 目录并重建 SQLite 索引
   2. **规则扩展**：遇到特殊 URL 写法时，优先在 `scan_page_api.py` 的 `URL_EXTRACT_RULES` 追加规则；遇到特殊对比方式时，在 `utils/api_path_match.py` 追加匹配规则
@@ -320,7 +232,7 @@ Mermaid 源文件与导出 PNG 见 `flow_chart/` 目录。
 
 ## 接口方法与用例编写规范
 
-**⚠️ 编写任何接口方法或用例代码前，AI 必须先 Read [`coding_style_guide.md`](./coding_style_guide.md) 并严格遵守其中所有规范。**
+**⚠️ 编写任何接口方法或用例代码前，AI 必须先 Read [`doc/coding_style_guide.md`](./doc/coding_style_guide.md) 并严格遵守其中所有规范。**
 
 该文件覆盖：接口方法结构/命名/payload/取值规则，用例结构/编排模式/参数化/断言风格，以及编写前必检清单（风格对齐、接口查重、编码校验）。
 
@@ -341,7 +253,7 @@ Mermaid 源文件与导出 PNG 见 `flow_chart/` 目录。
 
 ## 高频经验总结
 
-详见 [`high_frequency_experience.md`](./high_frequency_experience.md)（按需加载，不需每次加载 SKILL.md 时读取）
+详见 [`doc/high_frequency_experience.md`](./doc/high_frequency_experience.md)（按需加载读取）
 
 Codex 用 `apply_patch` 时：Windows/中文路径下直接、小块、专用格式调用；警惕 BOM 匹配失败，shell 警告不等于失败。
 

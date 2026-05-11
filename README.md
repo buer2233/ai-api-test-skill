@@ -60,9 +60,13 @@ AI 执行规范详见 [`SKILL.md`](./SKILL.md)，完整流程图详见 [`flow_ch
 ```
 api-test-dwp/
 ├── README.md                     # 本文件（用户快速指南）
-├── SKILL.md                      # AI 执行规范（核心，每次激活必加载）
-├── coding_style_guide.md         # 接口方法/用例编码风格规范（编写时按需加载）
-├── high_frequency_experience.md  # 高频踩坑经验（按需查阅）
+├── SKILL.md                      # AI 执行规范入口（前置门禁 + 方式分流）
+├── doc/                          # 按需加载的拆分方案与辅助规范
+│   ├── mode_capture_driven.md     # 方式1：抓包驱动
+│   ├── mode_reference_case.md     # 方式2：参考已有用例
+│   ├── mode_curl_manual.md        # 方式3：cURL 手工
+│   ├── coding_style_guide.md      # 接口方法/用例编码风格规范
+│   └── high_frequency_experience.md # 高频踩坑经验
 ├── .gitignore                    # 忽略运行时产物
 ├── flow_chart/                   # 流程图（Mermaid 源码 + 导出 PNG）
 │   ├── flow.md                   # 完整流程图与决策树（Mermaid 源码）
@@ -112,8 +116,11 @@ api-test-dwp/
 
 | 文档 | 用途 |
 |---|---|
-| [`SKILL.md`](./SKILL.md) | AI 编写规范（完整执行流程、校验规则、风格约束） |
+| [`SKILL.md`](./SKILL.md) | AI 编写规范（前置门禁、方式分流、核心原则） |
+| [`doc/mode_capture_driven.md`](./doc/mode_capture_driven.md) | 方式1：抓包驱动详细流程 |
+| [`doc/mode_reference_case.md`](./doc/mode_reference_case.md) | 方式2：参考已有用例详细流程 |
+| [`doc/mode_curl_manual.md`](./doc/mode_curl_manual.md) | 方式3：cURL 手工详细流程 |
+| [`doc/coding_style_guide.md`](./doc/coding_style_guide.md) | 接口方法/用例编码风格规范 |
+| [`doc/high_frequency_experience.md`](./doc/high_frequency_experience.md) | 高频踩坑经验（按需查阅） |
 | [`flow_chart/flow.md`](./flow_chart/flow.md) | 完整流程图（Mermaid 源码，含决策树与三方式对比） |
 | [`capture/README.md`](./capture/README.md) | 抓包配置细节（证书安装、代理设置、过滤规则） |
-| [`high_frequency_experience.md`](./high_frequency_experience.md) | 高频踩坑经验（按需查阅） |
-

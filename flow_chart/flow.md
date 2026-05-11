@@ -2,6 +2,8 @@
 
 本文件使用 [Mermaid](https://mermaid.js.org/) 绘制。VSCode / GitHub / Obsidian / Typora 等均可直接渲染。
 
+> 三种方式的详细执行方案已拆分到 `doc/mode_capture_driven.md`、`doc/mode_reference_case.md`、`doc/mode_curl_manual.md`；本文件仅维护流程图与决策关系。
+
 ---
 
 ## 一、总览（入口流程）
