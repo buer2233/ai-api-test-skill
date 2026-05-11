@@ -18,6 +18,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - `SKILL.md` —— **每次会话必加载**。定义两道前置门禁（任务信息 5 项、编写方式 ①/②/③）、各方式执行流程、核心原则。AI 行为的唯一权威来源。
 - `README.md` —— 面向用户的快速指南。与 `SKILL.md` 部分内容重叠。修改策略时**先改 `SKILL.md`**，再把用户可见的部分同步到 `README.md`。
+- `python tools/scan_page_api.py`：刷新 `tools/page_api_index.sqlite3` 接口索引。
 - `coding_style_guide.md` —— **按需加载**，仅在编写接口方法 / 用例代码前 Read。`SKILL.md:301` 明确委派到本文件。
 - `high_frequency_experience.md` —— 仅在踩到对应坑（Codex apply_patch、`show_list`、参数化与断言同步等）时加载。
 - `flow_chart/flow.md` 与同目录 PNG —— Mermaid 源码与导出图。`flow.md` 实质变化时才更新 PNG。
@@ -120,3 +121,12 @@ capture/
   allowed_prefixes.txt           可由用户扩展的 URL 前缀白名单
   start.bat / stop.bat           12138 端口生命周期管理
 ```
+
+## 其它需要准备的规则
+1. 新增python文件时,文件最前面都需要加上如下内容:
+```python
+# -*- coding: utf-8 -*-
+# Author: dengwanpeng
+```
+2. 无论是AGENTS.md还是CLAUDE.md文件修改，都需要同步的修改另外一个文件，两个文件保持一致。
+

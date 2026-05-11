@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Create Date:2026/5/11
 # Author: dengwanpeng
+
 """项目根定位与运行时产物目录解析（多模块共用）。
 
 设计目标：
