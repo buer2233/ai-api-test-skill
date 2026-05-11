@@ -24,35 +24,36 @@ from typing import List, Optional
 
 
 TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
+_SKILL_ROOT = os.path.dirname(TOOLS_DIR)
+if _SKILL_ROOT not in sys.path:
+    sys.path.insert(0, _SKILL_ROOT)
+
+from utils.project_root import (  # noqa: E402
+    resolve_project_root,
+    get_temp_dir,
+)
+
+
 INDEX_PATH = os.path.join(TOOLS_DIR, "page_api_index.json")
 
 
-def _find_repo_root(start: str) -> Optional[str]:
-    """从 start 向上找到含有 'E10自动化' 子目录的仓库根。"""
-    cur = start
-    for _ in range(10):
-        if os.path.isdir(os.path.join(cur, "E10自动化")):
-            return cur
-        parent = os.path.dirname(cur)
-        if parent == cur:
-            return None
-        cur = parent
-    return None
+def _warn(msg: str) -> None:
+    print(f"WARN: {msg}", file=sys.stderr)
 
 
-def _find_project_root() -> Optional[str]:
-    """从当前工作目录向上查找 test-automation 项目根。"""
-    return _find_repo_root(os.getcwd())
+def _resolve_repo_root() -> Optional[str]:
+    return resolve_project_root(on_warn=_warn)
 
 
 def _get_temp_dir() -> str:
-    """返回 api_test_dwp_temp 目录路径，确保目录存在。"""
-    repo_root = _find_project_root()
-    if not repo_root:
-        print("ERROR: 未找到仓库根（含 E10自动化 目录），请确认当前工作目录在 test-automation 项目内", file=sys.stderr)
+    """返回 api_test_dwp_temp 目录路径；定位失败时打印 ERROR 并返回 ""。"""
+    temp_dir = get_temp_dir(on_warn=_warn)
+    if not temp_dir:
+        print(
+            "ERROR: 未找到仓库根（含 E10自动化 目录），请确认当前工作目录在 test-automation 项目内，或在 skill 根目录 config.json 中配置 project_path",
+            file=sys.stderr,
+        )
         return ""
-    temp_dir = os.path.join(repo_root, "api_test_dwp_temp")
-    os.makedirs(temp_dir, exist_ok=True)
     return temp_dir
 
 
@@ -209,9 +210,9 @@ def main():
     parser.add_argument("--out", default=None, help="输出草稿路径（默认 api_test_dwp_temp/capture_selection.md）")
     args = parser.parse_args()
 
-    repo_root = _find_project_root()
+    repo_root = _resolve_repo_root()
     if not repo_root:
-        print("ERROR: 未找到仓库根（含 E10自动化 目录），请确认当前工作目录在 test-automation 项目内", file=sys.stderr)
+        print("ERROR: 未找到仓库根（含 E10自动化 目录），请确认当前工作目录在 test-automation 项目内，或在 skill 根目录 config.json 中配置 project_path", file=sys.stderr)
         return 1
 
     temp_dir = _get_temp_dir()

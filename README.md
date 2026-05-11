@@ -27,6 +27,8 @@ AI 执行规范详见 [`SKILL.md`](./SKILL.md)，完整流程图详见 [`flow_ch
 - `[接口方法文件]` 与 `[接口方法位置]` **必须同时**填"当前用例无新增接口"，只填一项不合法
 - **例外**：纯查询/工具/诊断类对话不需要填
 
+> AI 在任务信息校验通过后，会自动从 `[接口用例文件]` 路径提取项目根（`E10自动化` 之前的那一截），写入 skill 根目录 `config.json` 的 `project_path` 字段。抓包与勾选工具会优先读取该配置定位 `api_test_dwp_temp/` 落地目录，避免因 CWD 不在项目内导致产物错落到 skill 自身目录。
+
 ## 三种编写方式
 
 任务信息齐全后，AI 会让您选择以下方式（或根据任务信号自动推断）：
@@ -75,15 +77,18 @@ api-test-dwp/
 │   ├── start.bat                 # 一键启动 12138
 │   ├── stop.bat                  # 停止 12138 进程
 │   ├── capture_addon.py          # mitmdump 插件（过滤 + 落盘 JSONL）
-│   ├── allowed_prefixes.txt      # 用户可扩展的 URL 过滤前缀
-│   └── latest.jsonl              # 抓包产物（gitignored）
+│   └── allowed_prefixes.txt      # 用户可扩展的 URL 过滤前缀
 ├── tools/                        # 索引与匹配工具（三方式共用）
 │   ├── scan_page_api.py          # 扫描 page_api 生成索引
 │   ├── match_captures.py         # 抓包 vs 索引 → 勾选草稿
 │   ├── check_capture_server.py   # 检测 12138 抓包服务器状态
 │   └── page_api_index.json       # 全局接口覆盖文档（纳入版本管理）
-└── capture_selection.md          # 勾选草稿（gitignored）
+├── utils/                        # 多模块共用的基础函数（复用规则见 CLAUDE.md / AGENTS.md）
+│   └── project_root.py           # 项目根定位 + config.json 解析
+└── config.json                   # 运行时配置（AI 写入 project_path）
 ```
+
+> 运行时产物（`latest.jsonl`、`capture_selection.md`）落在**消费方项目**的 `api_test_dwp_temp/` 下，**不在** skill 自身目录。
 
 ## 常见问题
 
@@ -95,9 +100,11 @@ api-test-dwp/
 
 **Q：抓包数据太多？** 在 `capture/allowed_prefixes.txt` 删减前缀，或在勾选草稿中只勾必要接口。
 
-**Q：抓包含敏感信息吗？** `Cookie`/`Authorization` 头仅保留前 20 字符 + 长度摘要，不落全量。建议定期清理 `capture/latest.jsonl`。
+**Q：抓包含敏感信息吗？** `Cookie`/`Authorization` 头仅保留前 20 字符 + 长度摘要，不落全量。建议定期清理消费方项目下的 `api_test_dwp_temp/latest.jsonl`。
 
 **Q：不想用抓包？** 可用方式②（参考已有用例）或方式③（cURL 手工）。
+
+**Q：抓包数据落到 skill 目录而不是项目目录？** 老问题，根因是工具沿 CWD 向上找 `E10自动化`，启动方式不对时会找不到。当前版本已支持显式配置：AI 在任务信息校验通过后会写入 `config.json` 的 `project_path`，工具优先读取该字段。如仍异常，手动检查 `<skill 根目录>/config.json` 是否包含正确的绝对路径，且该路径下确实存在 `E10自动化/` 子目录。
 
 ## 进一步阅读
 

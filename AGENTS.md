@@ -4,7 +4,16 @@
 默认使用简体中文进行文档编写、说明输出、评审备注与协作沟通。仅在用户明确要求英文，或外部规范强制要求英文时，才切换语言。
 
 ## 项目结构与模块组织
-本仓库用于维护 `api-test-dwp` 接口自动化 Skill。核心执行规范放在 `SKILL.md`，面向使用者的快速说明放在 `README.md`，编码约束与经验总结分别放在 `coding_style_guide.md` 和 `high_frequency_experience.md`。流程图相关文件集中在 `flow_chart/`，抓包能力放在 `capture/`，复用型 Python 工具放在 `tools/`。不要提交运行期产物，例如 `capture/latest.jsonl`、勾选草稿，或目标项目 `api_test_dwp_temp/` 下的临时文件。
+本仓库用于维护 `api-test-dwp` 接口自动化 Skill。核心执行规范放在 `SKILL.md`，面向使用者的快速说明放在 `README.md`，编码约束与经验总结分别放在 `coding_style_guide.md` 和 `high_frequency_experience.md`。流程图相关文件集中在 `flow_chart/`，抓包能力放在 `capture/`，复用型 Python 工具放在 `tools/`，**多模块共用的基础函数 / 常量统一放在 `utils/`**（详见下文「复用代码必须放在 utils/」）。运行期配置写在 `config.json`（`project_path`）。不要提交运行期产物，例如目标项目 `api_test_dwp_temp/` 下的 `latest.jsonl`、`capture_selection.md`。
+
+## 复用代码必须放在 utils/
+任何被两个及以上模块复用的基础函数 / 常量 / 工具类，统一放在 `utils/` 下，**不得在调用方文件内复制粘贴**。新增共享逻辑时遵循：
+
+- 按职责命名子模块，如 `utils/project_root.py`、`utils/url_parse.py`；不要堆在单个 `utils.py` 里。
+- 调用方通过 `sys.path.insert(0, _SKILL_ROOT)` + `from utils.xxx import yyy` 引用，`_SKILL_ROOT` 由 `os.path.abspath(__file__)` 向上推算到 skill 根，**不依赖 CWD**。
+- 涉及日志的工具函数采用 **callback 注入**（`on_warn` / `on_info`）解耦——utils 本身不引入 `mitmproxy.ctx.log` 或 `print(sys.stderr)` 的偏向。
+- utils 内只用标准库 + 项目已直接依赖的库，不引入新依赖。
+- 发现现有重复实现没放进 utils 的，按本规则补救。
 
 ## 构建、测试与开发命令
 本仓库没有独立构建步骤，日常工作以维护文档和脚本为主。
