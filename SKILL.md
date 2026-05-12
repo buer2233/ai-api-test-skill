@@ -7,6 +7,10 @@ description: 接口自动化通用 skill，通过 CWD 自动适配当前 test-au
 
 这是一个**通过 CWD 自动适配当前项目**的接口自动化编写 skill，目标是把已验证有效的编写习惯、问题处理方式和交付格式沉淀为稳定流程。运行时产物统一落在当前项目 `api_test_dwp_temp/` 目录下。
 
+## 🚨 前置必跑 0：全局通用前置（与前置必填 A 同步执行）
+
+skill 被触发时，AI 与前置必填 A 一并执行 `python tools/preflight_check.py`，把脚本输出原文回显给用户即可，无需为此打断用户或等待回复。
+
 ## 🚨 前置必填 A：本次任务信息（最高优先级 / 任何工作开始前必须校验）
 
 任何触发本 skill 的任务，AI **在做任何调用、分析、扫描、抓包、写代码之前**，必须先检查用户是否已经提供以下 5 项信息。**只要缺任意一项，立即停止后续动作**，直接把下面这段原文作为回复返回给用户，等待用户把 5 项补齐后再继续工作。
@@ -164,6 +168,7 @@ Mermaid 源文件与导出 PNG 见 `flow_chart/` 目录。
 - **抓包底座**：
   - `capture/capture_addon.py`（skill 内置工具）
 - **索引与匹配工具**：
+  - `tools/preflight_check.py`（skill 入口前置；接口数据时效检查）
   - `tools/scan_page_api.py`（skill 内置工具）
   - `tools/match_captures.py`（skill 内置工具）
   - `tools/check_capture_server.py`（skill 内置工具）
@@ -200,7 +205,7 @@ Mermaid 源文件与导出 PNG 见 `flow_chart/` 目录。
 - **优先使用 `tools/page_api_index.sqlite3`**（由 `scan_page_api.py` 生成，纳入版本管理）：
   - 按 `api_url` + `method` 命中即视为已实现；路径含 `{1}` 等变量时按 `utils/api_path_match.py` 的规则匹配
   - 索引条目包含 `api_name`、`api_desc`、`Author`、`Create Date`、`Update Date`、`method`、`class`、`bases`，可判断方法来源
-  - 索引缺失或生成时间超过 24 小时时，先执行 `scan_page_api.py` 刷新
+  - 索引时效由"前置必跑 0"中的 `preflight_check.py` 统一管理（7 天阈值）；AI 不再单独判断 24 小时；只在自己手工新增了接口方法后，仍需立即跑一次 `scan_page_api.py` 刷新
 - 索引不可用时回退到 grep 搜索，覆盖 `.format()` / `+` 拼接 / f-string 三种 URL 写法
 - 搜索范围不要只看当前文件，也要考虑父类、兄弟 API 文件、被当前测试类实例实际继承的 API 类
 - 如果 URL 已实现：
@@ -210,8 +215,9 @@ Mermaid 源文件与导出 PNG 见 `flow_chart/` 目录。
   - 才新增方法
   - **新增方法后必须同步运行 `tools/scan_page_api.py` 刷新 `tools/page_api_index.sqlite3`**，确保全局索引保持最新
 - **`tools/page_api_index.sqlite3` 更新方式**：
-  1. **扫描新增**：运行 `tools/scan_page_api.py` 自动扫描当前项目 page_api 目录并重建 SQLite 索引
-  2. **规则扩展**：遇到特殊 URL 写法时，优先在 `scan_page_api.py` 的 `URL_EXTRACT_RULES` 追加规则；遇到特殊对比方式时，在 `utils/api_path_match.py` 追加匹配规则
+  1. **扫描新增**：运行 `tools/scan_page_api.py`——库为空时全量重建（id 从 1 起）；库非空时全量扫描后按 `Create Date` 取最近 30 天，与现有 `(api_url, method)` 比对，仅追加新接口
+  2. **强制重建**：`python tools/scan_page_api.py --full` 清空并重写整表，id 重新从 1 编号
+  3. **规则扩展**：URL 抽取在 `scan_page_api.py` 的 `URL_EXTRACT_RULES` 追加；HTTP method 抽取在 `REQUEST_METHOD_RULES` 追加（已覆盖 `requests.xxx(...)`、`requests.request("METHOD", ...)`、`self.send_msg("get"/"post", ...)`）；URL 抓包匹配在 `utils/api_path_match.py` 追加
 
 ### 4. 以真实返回为准
 

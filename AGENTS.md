@@ -75,14 +75,24 @@ capture/stop.bat                      # 停止
 capture/restart.bat                   # 停止 12138 后等待 1 秒并重启
 python tools/check_capture_server.py  # 退出码 0=RUNNING、1=NOT_RUNNING、2=PORT_OCCUPIED
 
+# 入口前置：接口数据时效检查（skill 触发后第一步必跑）
+python tools/preflight_check.py
+
 # 扫描全局 page_api URL（写入 tools/page_api_index.sqlite3）
-python tools/scan_page_api.py         # 增量（按 mtime）
-python tools/scan_page_api.py --full  # 全量重扫
+python tools/scan_page_api.py         # 自动模式：库空全量重建（id 从 1 起）；库非空时按 Create Date 近 30 天 + (api_url, method) diff 增量追加
+python tools/scan_page_api.py --full  # 强制全量重建（清空 + 重写，id 重新从 1）
 
 # 用抓包 JSONL 与索引比对，生成勾选草稿
 python tools/match_captures.py
 python tools/match_captures.py --jsonl path/to/latest.jsonl
 ```
+
+`scan_page_api.py` 已覆盖三类 HTTP method 写法：`requests.<verb>(...)` / `requests.request("VERB", ...)` / `self.send_msg("get"|"post", ...)`。method 在入库前统一 `upper()`。
+
+`preflight_check.py` 仅做日期比对：
+- 当前时间与 `config.json.apiDataUpdateDate` 相差 ≤ 7 天 → 提示一周内最新
+- > 7 天 → 自动调 `scan_page_api.py`，并写回 `apiDataUpdateDate=今天`
+- 当前日期早于 `apiDataUpdateDate` → 原文返回让用户改正
 
 消费方 pytest 闭环（与编写方式无关，需在消费方仓库内执行）：
 
@@ -127,7 +137,8 @@ api-test-dwp/
 │   ├── capture_addon.py          # mitmdump 插件（过滤 + 落盘 JSONL）
 │   └── allowed_prefixes.txt      # 用户可扩展的 URL 过滤前缀
 ├── tools/                        # 索引与匹配工具（三方式共用）
-│   ├── scan_page_api.py          # 扫描 page_api 生成索引
+│   ├── preflight_check.py        # skill 入口前置：接口数据时效检查
+│   ├── scan_page_api.py          # 扫描 page_api 生成索引（库空全量、库非空增量）
 │   ├── match_captures.py         # 抓包 vs 索引 → 勾选草稿
 │   ├── check_capture_server.py   # 检测 12138 抓包服务器状态
 │   └── page_api_index.sqlite3    # SQLite 全局接口覆盖文档（纳入版本管理）
@@ -136,7 +147,7 @@ api-test-dwp/
 │   ├── common_function.py        # 通用配置更新等共享方法
 │   ├── api_index_db.py           # SQLite 索引读写
 │   └── api_path_match.py         # 抓包路径匹配规则
-└── config.json                   # 运行时配置（AI 写入 project_path / baseurl）
+└── config.json                   # 运行时配置：project_path / baseurl / apiDataUpdateDate（最近一次 scan 日期，preflight 用）
 ```
 
 ## 其它需要准备的规则
