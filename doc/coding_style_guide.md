@@ -16,18 +16,17 @@
 
 ## 接口方法编写规范
 
-优先对照目标文件**末尾最后 5 个接口方法**，保持风格一致。
-
 ### 方法结构
 
-通常应保持如下风格：
+必须严格按照下面的格式编写接口方法，不能参考现在已有上下文的接口方法
 
 ```python
-def method_name(self, ETEAMSID, status_code=200, response_code=200, **kwargs):
+def method_name(self, ETEAMSID, status_code=200, **kwargs):
     """中文说明"""
     # Author: dengwanpeng
     # Create Date: YYYY-MM-DD
-    url = "https://{0}/api/...".format(self.base_url)
+    # IsAI: True
+    url = f"https://{self.base_url}/api/..."
     payload = {
         ...
     }
@@ -36,9 +35,7 @@ def method_name(self, ETEAMSID, status_code=200, response_code=200, **kwargs):
     headers = {"Cookie": f"ETEAMSID={ETEAMSID}"}
     res = requests.request("POST", url, headers=headers, json=payload)
     assert res.status_code == status_code, f"{error_msg},接口<{url}>报错-{res.status_code},reason:{res.reason},text:{res.text}"
-    response = res.json()
-    assert response.get("code") == response_code, f"{error_msg},接口<{url}>报错-{response}"
-    return response
+    return res.json()
 ```
 
 ### 方法命名
@@ -83,10 +80,7 @@ def method_name(self, ETEAMSID, status_code=200, response_code=200, **kwargs):
 ### 常见编排模式
 
 - 先取前置 fixture / 表单 / 页面 / 数据
-- 再初始化组件或接口参数
-- 再保存页面/组件
-- 再查询设计页预览数据
-- 再查询前台预览数据
+- 实际的用例执行步骤
 - 最后断言数量、结构、关键字段、排序/过滤结果
 
 ### 参数化
