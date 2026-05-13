@@ -12,16 +12,21 @@
 flowchart TD
     Start([用户触发任务]) --> ExceptCheck{纯查询/工具/诊断类?}
     ExceptCheck -- 是 --> QuickAnswer[直接响应并提示<br/>正式编写需先提交任务信息]
-    ExceptCheck -- 否 --> A[前置 A<br/>校验 5 项任务信息]
+    ExceptCheck -- 否 --> P0[前置 0<br/>运行 preflight_check.py]
+
+    P0 --> P0Result{索引数据<br/>是否可用?}
+    P0Result -- 日期配置有误 --> P0Fail[回显错误信息<br/>请用户修正 config.json]
+    P0Fail --> Start
+    P0Result -- "数据最新 / 已自动更新" --> A[前置 A<br/>校验 5 项任务信息]
 
     A -- 缺任一项 --> ARej[打回：返回填写模板<br/>等用户补齐]
     ARej --> Start
 
-    A -- 5 项齐全 --> A2{[接口方法文件]<br/>与 [接口方法位置]<br/>是否声明<br/>'当前用例无新增接口'?}
+    A -- 5 项齐全 --> A2{"接口方法文件<br/>与 接口方法位置<br/>是否声明<br/>当前用例无新增接口?"}
 
-    A2 -- 两项同为'无新增接口' --> NoNewApi[登记: 本次不得新增接口<br/>只能复用现有]
-    A2 -- 两项均为具体内容 --> HasNewApi[登记: 允许按指定位置<br/>新增接口方法]
-    A2 -- 只填一项'无新增接口' --> A2Rej[打回: 必须同时声明]
+    A2 -- "两项同为无新增接口" --> NoNewApi["登记: 本次不得新增接口<br/>只能复用现有"]
+    A2 -- 两项均为具体内容 --> HasNewApi["登记: 允许按指定位置<br/>新增接口方法"]
+    A2 -- "只填一项无新增接口" --> A2Rej["打回: 必须同时声明"]
     A2Rej --> Start
 
     NoNewApi --> B[前置 B<br/>确认编写方式]
@@ -50,7 +55,7 @@ flowchart TD
     classDef reject fill:#f88,stroke:#c00,color:#000
     classDef pass fill:#8f8,stroke:#080,color:#000
     classDef wait fill:#fc8,stroke:#c80,color:#000
-    class ARej,A2Rej reject
+    class ARej,A2Rej,P0Fail reject
     class NoNewApi,HasNewApi pass
     class BAsk,BRecv wait
 ```
@@ -244,13 +249,16 @@ flowchart TD
 
 ---
 
-## 七、前置 A / 前置 B 决策闸门
+## 七、前置 0 / 前置 A / 前置 B 决策闸门
 
 ```mermaid
 flowchart LR
     Q1[用户请求] --> G1{是编写类任务?}
     G1 -- 否 --> PassThru[例外通道:<br/>查询/工具/诊断]
-    G1 -- 是 --> G2{前置A 5项齐全?}
+    G1 -- 是 --> G0[运行 preflight_check.py]
+    G0 --> G0R{索引数据可用?}
+    G0R -- 否 --> G0Fail[回显错误<br/>等用户修正]
+    G0R -- 是 --> G2{前置A 5项齐全?}
 
     G2 -- 否 --> Ret1[返回填写模板]
     G2 -- 部分: 只一项填无新增 --> Ret2[返回同填提示]
@@ -263,6 +271,7 @@ flowchart LR
     Auto --> Go[进入对应方式流程]
     Take --> Go
 
+    style G0Fail fill:#f88
     style Ret1 fill:#f88
     style Ret2 fill:#f88
     style Ask fill:#fc8
@@ -276,13 +285,13 @@ flowchart LR
 
 | 流程图章节 | SKILL.md 对应章节 |
 |---|---|
-| 一、总览 | 🚨 前置必填 A + B |
+| 一、总览 | 🚨 前置必跑 0 + 前置必填 A + B |
 | 二、方式① | ① 方式1：抓包驱动（推荐） |
 | 三、方式② | ② 方式2：参考已有用例（推荐） |
 | 四、方式③ | ③ 方式3：cURL 手工（补充） |
 | 五、pytest 闭环 | 核心原则 → 5. 测试必须闭环 |
 | 六、对比速查 | 三种方式的共用规范 |
-| 七、决策闸门 | 前置必填 A / B 校验规则 |
+| 七、决策闸门 | 前置必跑 0 + 前置必填 A / B 校验规则 |
 
 ---
 
