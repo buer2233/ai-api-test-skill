@@ -7,9 +7,9 @@ description: 接口自动化通用 skill，通过 CWD 自动适配当前 test-au
 
 这是一个**通过 CWD 自动适配当前项目**的接口自动化编写 skill，目标是把已验证有效的编写习惯、问题处理方式和交付格式沉淀为稳定流程。运行时产物统一落在当前项目 `api_test_dwp_temp/` 目录下。
 
-## 🚨 前置必跑 0：全局通用前置（与前置必填 A 同步执行）
+## 🚨 前置必跑 0：全局通用前置（由 hook 自动执行）
 
-skill 被触发时，AI 与前置必填 A 一并执行 `python tools/preflight_check.py`，把脚本输出原文回显给用户即可，无需为此打断用户或等待回复。
+skill 被触发瞬间，用户级 `~/.claude/settings.json` 的 `PreToolUse` hook 自动执行 `hooks/preflight_hook.py`（仅对 `api-test-dwp` 生效），调用 `tools/preflight_check.py` 并把结果以 `additionalContext` 注入上下文，AI 直接原文回显即可、无需再手动调用。
 
 ## 🚨 前置必填 A：本次任务信息（最高优先级 / 任何工作开始前必须校验）
 

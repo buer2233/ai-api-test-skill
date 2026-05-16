@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python C:/Users/admin/.claude/skills/api-test-dwp/hooks/preflight_hook.py"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -292,6 +292,7 @@ flowchart LR
 | 五、pytest 闭环 | 核心原则 → 5. 测试必须闭环 |
 | 六、对比速查 | 三种方式的共用规范 |
 | 七、决策闸门 | 前置必跑 0 + 前置必填 A / B 校验规则 |
+| 附录 A、Hook 触发时序 | 🚨 前置必跑 0（由 hook 自动执行）+ 用户级 `~/.claude/settings.json` 的 `hooks.PreToolUse` |
 
 ---
 
@@ -300,5 +301,83 @@ flowchart LR
 - 本文件与 `SKILL.md` 保持**双向一致**：修改任一侧流程，另一侧必须同步
 - Mermaid 语法兼容性优先 GitHub 与 VSCode 的 Mermaid 插件
 - 如流程图需要导出为图片，推荐 [Mermaid Live Editor](https://mermaid.live/)
+
+---
+
+## 附录 A、PreToolUse Hook 触发时序图
+
+描述 AI 调用 `Skill({skill: "api-test-dwp"})` 时，Claude Code 如何同步拦截、spawn `preflight_hook.py`、并把 `preflight_check.py` 的结果注入 AI 上下文的完整链路。
+
+> 配套实现：`hooks/preflight_hook.py` + 用户级 `~/.claude/settings.json` 的 `hooks.PreToolUse.matcher="Skill"`。
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant AI as AI (Claude)
+    participant CC as Claude Code Harness
+    participant HK as preflight_hook.py
+    participant PF as preflight_check.py
+    participant FS as config.json / sqlite 索引
+
+    Note over AI,CC: 用户触发任务 → AI 决定调用 Skill 工具
+
+    AI->>CC: Skill({skill: "api-test-dwp"})
+    Note over CC: 拦截工具调用<br/>查 settings.json<br/>命中 matcher: "Skill"
+
+    CC->>HK: spawn 子进程<br/>cwd=会话CWD<br/>stdin=JSON{tool_name, tool_input.skill, cwd, ...}
+    activate HK
+
+    HK->>HK: 读 stdin 并解析 tool_input.skill
+
+    alt skill != "api-test-dwp"
+        HK-->>CC: exit 0（无 stdout 输出）
+        Note over CC: 直接放行<br/>不影响其它 skill
+    else skill == "api-test-dwp"
+        HK->>PF: subprocess.run(preflight_check.py)<br/>PYTHONIOENCODING=utf-8<br/>timeout=120s
+        activate PF
+        PF->>FS: 读 config.json.apiDataUpdateDate
+        FS-->>PF: 日期字符串
+
+        alt delta ≤ 7 天
+            PF-->>HK: stdout: "数据库中的接口为一周内的最新数据..."<br/>exit 0
+        else delta > 7 天
+            PF->>FS: 调 scan_page_api.py 增量扫描
+            FS-->>PF: 新增接口清单
+            PF-->>HK: stdout: [scan_page_api] recent_new_methods<br/>exit 0
+        else 日期非法 / 未来日期
+            PF-->>HK: stdout: 错误提示<br/>exit 1
+        end
+        deactivate PF
+
+        HK->>HK: 拼 JSON: {hookSpecificOutput:<br/> {hookEventName, additionalContext}}
+        HK-->>CC: stdout 输出 JSON<br/>exit 0（即便 PF 失败也不阻断）
+    end
+    deactivate HK
+
+    Note over CC: 解析 hookSpecificOutput<br/>把 additionalContext 注入<br/>AI 下一轮上下文
+
+    CC->>CC: 真正执行 Skill 工具<br/>加载 SKILL.md 等
+
+    CC-->>AI: Skill 工具结果 + preflight additionalContext
+
+    Note over AI: AI 同时看到:<br/>① SKILL.md 内容<br/>② preflight 结论<br/>不再需要主动调 preflight
+```
+
+### 关键时序约束（看图配套说明）
+
+| 步骤 | 同步/异步 | 失败处理 |
+|---|---|---|
+| ②→③ harness 调用 hook | **同步阻塞** | Skill 工具不执行直到 hook 退出 |
+| ④ hook 解析 stdin | 同步 | JSON 解析失败 → 直接 exit 0 放行 |
+| ⑤ skill 名过滤 | 同步 | 不匹配 → 立即 exit 0，不跑 PF |
+| ⑥→⑩ spawn preflight | 同步阻塞 | timeout=120s；超时 → 注入诊断信息但 exit 0 |
+| ⑪ JSON 输出 | 同步 | 永远 exit 0（PF 失败也不阻断 Skill） |
+| ⑫ 注入 additionalContext | 由 harness 处理 | 作为 system 消息进 AI 上下文 |
+
+### 关键设计取舍
+
+- **永不阻断**：即便 preflight 自己崩了，hook 也 exit 0；宁可让 AI 看到诊断信息自行判断，也不要因 hook 故障让 skill 整个不可用。如需强制阻断，把 hook 末尾改成按 `result.returncode` 决定 exit 2。
+- **二次过滤放在脚本里**：`matcher: "Skill"` 在 settings 层只能按工具名匹配，无法区分具体 skill 名；脚本内 `skill_name == "api-test-dwp"` 这层过滤是必须的，否则任何 Skill 调用都会触发 preflight。
+- **CWD 取 payload.cwd**：preflight 子进程的 CWD 是用户会话 CWD（消费方项目），不是 hook 脚本所在目录——这样 `utils/project_root.py` 的 fallback 路径搜索能正确落到消费方项目。
 
 
