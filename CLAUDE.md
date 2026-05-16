@@ -16,9 +16,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 文档刻意拆分，并非每次激活都全部加载：
 
-- `SKILL.md` —— **每次会话必加载**。定义两道前置门禁（任务信息 5 项、编写方式 ①/②/③）、方式分流和核心原则。AI 行为的入口权威来源；三种方式细则按需读取 `doc/mode_*.md`。
+- `SKILL.md` —— **每次会话必加载**。保留两道前置门禁的**触发条件 + 必填字段 + 判定边界**、方式分流、核心原则纲领。AI 行为的入口权威来源；详细执行手册按需 Read `doc/preflight_gates.md` 与 `doc/core_principles.md`，方式细则按需 Read `doc/mode_*.md`。
 - `README.md` —— 面向用户的快速指南。与 `SKILL.md` 部分内容重叠。修改策略时**先改 `SKILL.md`**，再把用户可见的部分同步到 `README.md`。
 - `python tools/scan_page_api.py`：刷新 `tools/page_api_index.sqlite3` 接口索引。
+- `doc/preflight_gates.md` —— **按需加载**，前置门禁详细执行手册（打回模板、固化项目根操作、三选一菜单等）。SKILL.md 触发前置 A/B 时必须 Read。
+- `doc/core_principles.md` —— **按需加载**，核心原则 1-5 的详细规则（查重流程、索引维护、pytest 闭环细节等）。SKILL.md 触发对应原则时按需 Read。
 - `doc/mode_capture_driven.md` / `doc/mode_reference_case.md` / `doc/mode_curl_manual.md` —— 三种接口自动化编写方案，选定方式后必须按需读取对应文件。
 - `doc/coding_style_guide.md` —— **按需加载**，仅在编写接口方法 / 用例代码前 Read。
 - `doc/high_frequency_experience.md` —— 仅在踩到对应坑（Codex apply_patch、`show_list`、参数化与断言同步等）时加载。

@@ -60,8 +60,10 @@ AI 执行规范详见 [`SKILL.md`](./SKILL.md)，完整流程图详见 [`flow_ch
 ```
 api-test-dwp/
 ├── README.md                     # 本文件（用户快速指南）
-├── SKILL.md                      # AI 执行规范入口（前置门禁 + 方式分流）
+├── SKILL.md                      # AI 执行规范入口（前置门禁声明 + 方式分流 + 核心原则纲领）
 ├── doc/                          # 按需加载的拆分方案与辅助规范
+│   ├── preflight_gates.md         # 前置门禁详细执行手册（打回模板、固化项目根、三选一菜单）
+│   ├── core_principles.md         # 核心原则 1-5 详细规则（查重、索引维护、pytest 闭环）
 │   ├── mode_capture_driven.md     # 方式1：抓包驱动
 │   ├── mode_reference_case.md     # 方式2：参考已有用例
 │   ├── mode_curl_manual.md        # 方式3：cURL 手工
@@ -119,6 +121,8 @@ api-test-dwp/
 | 文档 | 用途 |
 |---|---|
 | [`SKILL.md`](./SKILL.md) | AI 编写规范（前置门禁、方式分流、核心原则） |
+| [`doc/preflight_gates.md`](./doc/preflight_gates.md) | 前置门禁详细执行手册（按需加载） |
+| [`doc/core_principles.md`](./doc/core_principles.md) | 核心原则 1-5 详细规则（按需加载） |
 | [`doc/mode_capture_driven.md`](./doc/mode_capture_driven.md) | 方式1：抓包驱动详细流程 |
 | [`doc/mode_reference_case.md`](./doc/mode_reference_case.md) | 方式2：参考已有用例详细流程 |
 | [`doc/mode_curl_manual.md`](./doc/mode_curl_manual.md) | 方式3：cURL 手工详细流程 |
