@@ -11,26 +11,9 @@ description: 接口自动化通用 skill，通过 CWD 自动适配当前 test-au
 
 当任务涉及在 `E10自动化/接口自动化测试/` 内**新增或修改**接口测试方法/pytest 用例时，优先使用本 skill。同样适用于按 URL 查重、处理中文编码/导入路径/登录态/返回结构差异、根据真实 pytest 报错循环修复等场景。
 
-## 🚨 前置门禁（任何工作开始前必校验，详见 @doc/preflight_gates.md）
+## 🚨 前置门禁（任何工作开始前必校验并执行）
 
-### 0. 入口前置（hook 自动执行）
-
-skill 被触发瞬间，用户级 `~/.claude/settings.json` 的 `PreToolUse` hook 自动执行 `hooks/preflight_hook.py`（仅对 `api-test-dwp` 生效），调用 `tools/preflight_check.py` 并把结果以 `additionalContext` 注入上下文，AI 直接原文回显即可、无需再手动调用。
-
-### A. 5 项任务信息（最高优先级）
-
-- **触发条件**：任何「新增/修改接口方法或用例」任务
-- **必填 5 项**：`[接口方法文件]` / `[接口方法位置]` / `[接口用例文件]` / `[接口用例位置]` / `[用例名]`
-- **「无新增接口」占位**：方法两项**同时**填"当前用例无新增接口"才视为合法；只填其一打回
-- **缺任一项** → 立即停止 + 照抄打回模板（详见 @doc/preflight_gates.md 「必填信息清单与打回模板」）
-- **校验通过** → 立即从 `[接口用例文件]` 提取 `E10自动化` 之前的部分作为 `project_path`，调用 `utils/common_function.py:update_skill_config` 写入 `config.json`（详见 @doc/preflight_gates.md 「校验通过后立即固化项目根」）
-- **例外豁免**：纯查询/工具/诊断类任务可不走必填校验，但回复末尾要提醒「正式编写时请先提交本次任务信息」（详见 @doc/preflight_gates.md 「例外情形」）
-
-### B. 编写方式三选一（前置 A 通过后）
-
-- ① 抓包驱动 / ② 参考已有用例 / ③ cURL 手工
-- 任务有明确信号时自动推断；信号模糊 → 照抄三选一菜单（菜单与推断规则详见 @doc/preflight_gates.md 「前置必填 B」）
-- 方式选定后 **TodoWrite 首项**必须记录：`[方式N] 编写 [用例名]（用例文件：xxx，位置：xxx；本次有/无新增接口）`
+- 必须读取并严格按照要求执行的文件：**@doc/preflight_gates.md**
 
 ## 三种用例编写方式的执行流程
 
