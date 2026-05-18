@@ -81,21 +81,25 @@ flowchart TD
     Stop --> Chk
 
     ServiceInfo --> UI
-    UI[提示用户操作 UI<br/>浏览器代理 127.0.0.1:12138<br/>完成后回复 '继续']
+    UI[步骤4: 提示用户操作 UI<br/>浏览器代理 127.0.0.1:12138<br/>完成后回复 '继续']
     UI --> UserOp[用户完成 UI 操作]
-    UserOp --> Scan[scan_page_api.py<br/>增量/全量刷新索引]
-    Scan --> Match[match_captures.py<br/>生成 capture_selection.md]
+    UserOp --> Scan[步骤5: scan_page_api.py<br/>增量/全量刷新索引]
+    Scan --> Match[步骤6: match_captures.py<br/>生成 capture_selection.md]
 
-    Match --> Stop2[AI 停下]
+    Match --> Stop2[步骤7: AI 停下]
     Stop2 --> Tick[等用户勾选并回复 '已勾选']
-    Tick --> Read[读 capture_selection.md]
+    Tick --> Read[步骤8: 读 capture_selection.md<br/>回看 latest.jsonl]
 
     Read --> ConflictChk{前置A='无新增接口'<br/>但草稿有新接口勾选?}
     ConflictChk -- 是 --> Reject1[打回:<br/>改前置A 或取消勾选]
     Reject1 --> End1([终止])
-    ConflictChk -- 否 --> Compose[按抓包顺序组装用例<br/>新接口按前置A位置新增<br/>已实现复用<br/>登录/二进制不入例]
+    ConflictChk -- 否 --> Landing[步骤8: 落点校验<br/>新接口按 pure_path 推荐<br/>已实现接口按索引复用<br/>登录/二进制不入例]
+    Landing --> Analyze[步骤9: 分析抓包数据<br/>识别入口 / 区分读写<br/>梳理主线 / 确定依赖]
+    Analyze --> Design[步骤10: 设计用例<br/>页面加载合并<br/>写操作独立<br/>依赖链串联]
+    Design --> Similar[步骤11: 相似度检查<br/>已有高度相似用例?<br/>询问是否复用/补充/参数化]
+    Similar --> Compose[步骤12: 用例编写<br/>按设计清单写方法和 pytest 用例<br/>遵守 coding_style_guide.md]
 
-    Compose --> Verify[pytest 闭环]
+    Compose --> Verify[步骤13: pytest 闭环]
     Verify --> F1End2([返回总览])
 ```
 
@@ -106,11 +110,16 @@ flowchart TD
 | 1 | 判断是否需要重启 | 用户是否明确提及重启抓包服务 |
 | 2 | 二选一处理抓包服务 | 重启：`restart.bat`；未重启：检查端口并按需 `start.bat` |
 | 3 | 返回服务信息 | `self.baseurl` / `self.prefixes` / `self.jsonl_path` |
-| 4 | 刷新索引 | `tools/page_api_index.sqlite3` |
-| 5 | 生成草稿 | `api_test_dwp_temp/capture_selection.md` |
-| 6 | 等用户勾选 | `[x]/[ ]` 标记 |
-| 7 | 编写方法与用例 | 新方法写入 `[接口方法文件]`，新用例写入 `[接口用例文件]` |
-| 8 | pytest 闭环 | 执行日志 + 通过/失败统计 |
+| 4 | 提示用户操作 UI | 浏览器代理与证书提示，完成后回复“继续” |
+| 5 | 刷新索引 | `tools/page_api_index.sqlite3` |
+| 6 | 生成草稿 | `api_test_dwp_temp/capture_selection.md` |
+| 7 | 等用户勾选 | `[x]/[ ]` 标记，AI 不得擅自续跑 |
+| 8 | 读勾选结果与落点校验 | 只处理用户确认勾选接口；新接口校验前置 A，已实现接口按索引复用 |
+| 9 | 分析抓包数据 | 入口请求、读写类型、业务主线、接口依赖关系 |
+| 10 | 设计用例 | 页面加载合并，写操作独立，依赖链串联 |
+| 11 | 相似度检查 | 高度相似用例处理建议，按用户确认复用/补充/参数化 |
+| 12 | 用例编写 | 新方法写入 `[接口方法文件]`，新用例写入 `[接口用例文件]` |
+| 13 | pytest 闭环 | 执行日志 + 通过/失败统计 |
 
 ---
 
