@@ -1,36 +1,19 @@
 ---
-name: api-test-dwp
-description: 接口自动化通用 skill，通过 CWD 自动适配当前 test-automation 项目。用于在 `\test-automation\E10自动化\接口自动化测试` 中新增、修改、补齐、迁移接口测试方法与 pytest 用例。触发场景包括：新增接口方法、新增接口测试用例、补齐参数化、修复接口断言、按指定位置插入代码、按 URL 查重复实现、处理 UTF-8 中文编码、执行 pytest 并根据真实报错循环修复直到通过。运行时产物统一放在当前项目 `api_test_dwp_temp/` 目录下。
+name: api-test-E10
+description: 当前 test-automation 项目内置的接口自动化编写 skill，物理位置 `.claude/skills/api-test-E10/`。用于在 `\test-automation\E10自动化\接口自动化测试` 中新增、修改、补齐、迁移接口测试方法与 pytest 用例。触发场景包括：新增接口方法、新增接口测试用例、补齐参数化、修复接口断言、按指定位置插入代码、按 URL 查重复实现、处理 UTF-8 中文编码、执行 pytest 并根据真实报错循环修复直到通过。运行时产物统一放在项目根 `api_test_dwp_temp/` 目录下。
 ---
 
-# api-test-dwp
+# api-test-E10
 
-通过 CWD 自动适配当前项目的接口自动化编写 skill，把已验证有效的编写习惯、问题处理方式和交付格式沉淀为稳定流程。运行时产物统一落在当前项目 `api_test_dwp_temp/` 目录下。
+随 `test-automation` 项目一起分发的接口自动化编写 skill，把已验证有效的编写习惯、问题处理方式和交付格式沉淀为稳定流程。项目根直接由 skill 在 `<project>/.claude/skills/api-test-E10/` 的固定位置推导，运行时产物统一落在项目根的 `api_test_dwp_temp/` 目录下。
 
 ## 适用范围
 
 当任务涉及在 `E10自动化/接口自动化测试/` 内**新增或修改**接口测试方法/pytest 用例时，优先使用本 skill。同样适用于按 URL 查重、处理中文编码/导入路径/登录态/返回结构差异、根据真实 pytest 报错循环修复等场景。
 
-## 🚨 前置门禁（任何工作开始前必校验，详见 @doc/preflight_gates.md）
+## 🚨 前置门禁（任何工作开始前必校验并执行）
 
-### 0. 入口前置（hook 自动执行）
-
-skill 被触发瞬间，用户级 `~/.claude/settings.json` 的 `PreToolUse` hook 自动执行 `hooks/preflight_hook.py`（仅对 `api-test-dwp` 生效），调用 `tools/preflight_check.py` 并把结果以 `additionalContext` 注入上下文，AI 直接原文回显即可、无需再手动调用。
-
-### A. 5 项任务信息（最高优先级）
-
-- **触发条件**：任何「新增/修改接口方法或用例」任务
-- **必填 5 项**：`[接口方法文件]` / `[接口方法位置]` / `[接口用例文件]` / `[接口用例位置]` / `[用例名]`
-- **「无新增接口」占位**：方法两项**同时**填"当前用例无新增接口"才视为合法；只填其一打回
-- **缺任一项** → 立即停止 + 照抄打回模板（详见 @doc/preflight_gates.md 「必填信息清单与打回模板」）
-- **校验通过** → 立即从 `[接口用例文件]` 提取 `E10自动化` 之前的部分作为 `project_path`，调用 `utils/common_function.py:update_skill_config` 写入 `config.json`（详见 @doc/preflight_gates.md 「校验通过后立即固化项目根」）
-- **例外豁免**：纯查询/工具/诊断类任务可不走必填校验，但回复末尾要提醒「正式编写时请先提交本次任务信息」（详见 @doc/preflight_gates.md 「例外情形」）
-
-### B. 编写方式三选一（前置 A 通过后）
-
-- ① 抓包驱动 / ② 参考已有用例 / ③ cURL 手工
-- 任务有明确信号时自动推断；信号模糊 → 照抄三选一菜单（菜单与推断规则详见 @doc/preflight_gates.md 「前置必填 B」）
-- 方式选定后 **TodoWrite 首项**必须记录：`[方式N] 编写 [用例名]（用例文件：xxx，位置：xxx；本次有/无新增接口）`
+- 必须读取并严格按照要求执行的文件：**@doc/preflight_gates.md**
 
 ## 三种用例编写方式的执行流程
 
@@ -63,15 +46,20 @@ skill 被触发瞬间，用户级 `~/.claude/settings.json` 的 `PreToolUse` hoo
 
 Mermaid 源文件与导出 PNG 见 `flow_chart/` 目录。
 
+## 接口方法与用例编写规范
+
+**⚠️ 编写任何接口方法或用例代码前，AI 必须先 Read [`doc/coding_style_guide.md`](./doc/coding_style_guide.md) 并严格遵守其中所有规范。**
+
+该文件覆盖：接口方法结构/命名/payload/取值规则，用例结构/编排模式/参数化/断言风格，以及编写前必检清单（风格对齐、接口查重、编码校验）。
+
 ## 项目内规范锚点
 
 编写接口自动化时，优先以以下文件为第一参考（**风格模板，不是功能强绑定模板**）：
 
-- **接口方法/用例风格**：`doc/coding_style_guide.md`
 - **抓包底座**：`capture/capture_addon.py`
 - **索引与匹配工具**：`tools/scan_page_api.py` / `tools/match_captures.py` / `tools/check_capture_server.py`（入口前置 `tools/preflight_check.py` 由 hook 自动执行，见前置 0）
 - **全局接口覆盖文档**：`tools/page_api_index.sqlite3` —— 全局 URL 索引，扫描或 AI 新增接口后需更新（纳入版本管理）
-- **运行时产物**（当前项目 `api_test_dwp_temp/`）：`latest.jsonl`（抓包落盘） / `capture_selection.md`（勾选草稿）
+- **运行时产物**（项目根 `api_test_dwp_temp/`）：`latest.jsonl`（抓包落盘） / `capture_selection.md`（勾选草稿）
 
 如果用户指定了别的参考文件或明确要求"参考当前位置上下文"，则以用户要求为先。
 
@@ -82,12 +70,6 @@ Mermaid 源文件与导出 PNG 见 `flow_chart/` 目录。
 3. **先复用，后新增** — 优先查 `tools/page_api_index.sqlite3`，未命中才新增；新增后必须立刻 `scan_page_api.py` 刷新
 4. **以真实返回为准** — 断言基于真实接口返回，警惕"方法返回 `response`"与"返回 `response.get('data')`"两种风格
 5. **测试必须闭环** — 默认必须 pytest 跑到通过；执行目录 / PYTHONPATH / 执行命令 / 关键日志 / 最终结果缺一不可
-
-## 接口方法与用例编写规范
-
-**⚠️ 编写任何接口方法或用例代码前，AI 必须先 Read [`doc/coding_style_guide.md`](./doc/coding_style_guide.md) 并严格遵守其中所有规范。**
-
-该文件覆盖：接口方法结构/命名/payload/取值规则，用例结构/编排模式/参数化/断言风格，以及编写前必检清单（风格对齐、接口查重、编码校验）。
 
 ## 失败排查优先级
 

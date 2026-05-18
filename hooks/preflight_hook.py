@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Author: dengwanpeng
 
-"""Claude Code PreToolUse hook：在 AI 调用 Skill 工具触发 api-test-dwp 时，
+"""Claude Code PreToolUse hook：在 AI 调用 Skill 工具触发 api-test-E10 时，
 自动执行 tools/preflight_check.py，把输出通过 hookSpecificOutput.additionalContext
 注入 AI 上下文，等价于 SKILL.md 里原本的「前置必跑 0」。
 
@@ -10,7 +10,7 @@ Hook I/O 协议（Claude Code 标准）：
 - stdout: JSON {hookSpecificOutput: {hookEventName, additionalContext}}
 - exit 0: 放行；exit 2: 阻断该工具调用
 
-⚠️ 触发范围限制：仅在 AI 主动调 `Skill({skill: "api-test-dwp"})` 时生效；
+⚠️ 触发范围限制：仅在 AI 主动调 `Skill({skill: "api-test-E10"})` 时生效；
    被 `Read` / `@skill_path` / system-reminder 触发的 skill 加载不会进入这里。
 """
 
@@ -39,8 +39,8 @@ def main() -> int:
     tool_input = payload.get("tool_input") or {}
     skill_name = (tool_input.get("skill") or "").strip()
 
-    # 只拦截 api-test-dwp，避免影响其他 Skill。
-    should_run = skill_name == "api-test-dwp"
+    # 只拦截 api-test-E10，避免影响其他 Skill。
+    should_run = skill_name == "api-test-E10"
 
     if not should_run:
         return 0

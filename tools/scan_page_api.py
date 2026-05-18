@@ -15,7 +15,7 @@ SQLite 字段：
 扫描规则维护：
     1. URL 抽取规则：在本文件的 URL_EXTRACT_RULES 中追加。
     2. HTTP method 抽取规则：在 REQUEST_METHOD_RULES 中追加。
-    3. 跨脚本复用的基础能力请放到 utils/ 下。
+    3. 跨脚本复用的基础能力请放到 skill_utils/ 下。
 """
 
 import argparse
@@ -41,7 +41,7 @@ _SKILL_ROOT = os.path.dirname(TOOLS_DIR)
 if _SKILL_ROOT not in sys.path:
     sys.path.insert(0, _SKILL_ROOT)
 
-from utils.api_index_db import (  # noqa: E402
+from skill_utils.api_index_db import (  # noqa: E402
     existing_url_method_pairs,
     get_default_db_path,
     insert_methods,
@@ -49,8 +49,8 @@ from utils.api_index_db import (  # noqa: E402
     load_metadata,
     replace_index,
 )
-from utils.common_function import update_skill_config  # noqa: E402
-from utils.project_root import resolve_project_root  # noqa: E402
+from skill_utils.common_function import update_skill_config  # noqa: E402
+from skill_utils.project_root import resolve_project_root  # noqa: E402
 
 
 INDEX_DB_PATH = get_default_db_path(TOOLS_DIR)
@@ -374,8 +374,8 @@ def main():
     repo_root = _resolve_repo_root()
     if not repo_root:
         print(
-            "ERROR: 未找到仓库根（含 E10自动化 目录），请确认当前工作目录在 test-automation 项目内，"
-            "或在 skill 根目录 config.json 中配置 project_path",
+            "ERROR: 未找到项目根（含 E10自动化 目录）。"
+            "请确认 skill 安装在 <project>/.claude/skills/api-test-E10/ 路径下。",
             file=sys.stderr,
         )
         return 1

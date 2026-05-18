@@ -1,17 +1,8 @@
 # 前置门禁详细执行手册
-
-> 本文件是 `SKILL.md` 「前置门禁」章节的详细执行手册。**何时 Read 本文件**：
-> - AI 在 SKILL.md 看到「前置门禁」章节、判定需要触发前置 A 或 B 时
-> - 需要照抄打回模板、三选一菜单、固化项目根操作步骤时
-> - 排查门禁判定边界（无新增接口占位、例外情形等）时
->
-> SKILL.md 已保留门禁存在性 + 触发条件 + 必填字段名 + 关键判定边界；本文件补充完整执行细节。
-
 ---
+## 🚨 前置必跑 0：入口前置（由 hook 自动执行）
 
-## 🚨 前置必跑 0：全局通用前置（由 hook 自动执行）
-
-skill 被触发瞬间，用户级 `~/.claude/settings.json` 的 `PreToolUse` hook 自动执行 `hooks/preflight_hook.py`（仅对 `api-test-dwp` 生效），调用 `tools/preflight_check.py` 并把结果以 `additionalContext` 注入上下文，AI 直接原文回显即可、无需再手动调用。
+skill 被触发瞬间，项目级 `.claude/settings.json` 的 `PreToolUse` hook 自动执行 `hooks/preflight_hook.py`（仅对 `api-test-E10` 生效），调用 `tools/preflight_check.py` 并把结果以 `additionalContext` 注入上下文，AI 直接原文回显即可、无需再手动调用。
 
 完整时序与设计取舍见 `flow_chart/flow.md` 附录 A。
 
@@ -23,7 +14,7 @@ skill 被触发瞬间，用户级 `~/.claude/settings.json` 的 `PreToolUse` hoo
 
 ### 必填信息清单与打回模板
 
-AI 校验发现缺项时，照抄以下模板返回：
+AI 校验发现缺项时，不要修改格式和任何内容，直接照抄以下模板返回：
 
 ```markdown
 请先提交本次任务的必填信息，补齐后我才能开始工作：
@@ -62,27 +53,16 @@ AI 校验发现缺项时，照抄以下模板返回：
 
 一旦任务进入"新增/修改接口方法或用例"阶段，必填校验立即生效，无一例外。
 
-### 校验通过后立即固化项目根（强制动作 / 任意方式都执行）
+### 项目根定位说明（本版本无需 AI 写入 config）
 
-5 项必填任务信息校验通过的**瞬间**，AI 必须从 `[接口用例文件]` 路径中提取项目根，并写入 skill 根目录的 `config.json`。该动作覆盖方式 ①②③，是保证抓包与勾选草稿落到正确项目目录的硬性前提。
+本 skill 已经固定安装在 `<project>/.claude/skills/api-test-E10/` 路径下，项目根由 `skill_utils/project_root.py` 直接从 skill 自身位置推导（`SKILL_ROOT/../../..`）。
 
-**提取规则**：取 `[接口用例文件]` 路径中 `E10自动化` **之前**的那一截作为 `project_path`。
-- 示例：`[接口用例文件] = D:/workSpace_001/test-automation/E10自动化/接口自动化测试/test_case/.../xxx.py`
-- 提取结果：`project_path = D:/workSpace_001/test-automation`
+因此前置 A 校验通过后，AI **不再需要**从 `[接口用例文件]` 路径提取并写入 `config.json` 的 `project_path` 字段——该字段在本版本中已经移除。抓包与勾选工具会通过 `skill_utils.project_root.resolve_project_root()` 自动定位 `<project>/api_test_dwp_temp/` 落地目录。
 
-**写入文件**：`<skill 根目录>/config.json`，通过 `utils/common_function.py` 的 `update_skill_config(update_config: dict)` 更新配置；调用时传入 `{"project_path": project_path}`，函数内部会保持其他字段不变并执行 `config_data.update(update_config)`。
-
-```json
-{ "project_path": "D:/workSpace_001/test-automation" }
-```
-
-**约束**：
-- 必须是**绝对路径**；正反斜杠均可，运行时 `os.path.normpath` 会统一
-- 路径下必须真实存在 `E10自动化` 子目录，否则 `capture_addon.py` / `match_captures.py` 会忽略该配置并 fallback 到 CWD 搜索
-- 若 `[接口方法文件]` 与 `[接口用例文件]` 同时提供且分别指向不同项目（极少见），以 `[接口用例文件]` 为准
-- 若 `[接口用例文件]` 路径中找不到 `E10自动化` 片段（说明路径不规范），**打回让用户改正**，不要凭空猜测项目根
-
-**为什么必须做**：抓包与勾选工具内部用 `_find_project_root()` 沿 CWD 向上搜索 `E10自动化` 子目录，但 `mitmdump` / `python` 启动时 CWD 受启动方式影响——一旦落在 skill 自身目录，搜索结果就是空，运行时产物会错误地落到 skill 内部（污染全局安装）。显式写入 `config.json` 后，工具会**优先**使用该配置，CWD 不再决定落地路径。
+如果运行时确实出现"找不到项目根"的错误，按以下顺序排查：
+1. 当前 skill 是否还处在 `<project>/.claude/skills/api-test-E10/` 路径下
+2. skill 上 3 层目录（即推导出的项目根）下是否存在 `E10自动化` 子目录
+3. 如以上两点均符合而仍报错，检查文件系统软链 / 符号链接是否被解析错误
 
 ---
 
@@ -90,7 +70,7 @@ AI 校验发现缺项时，照抄以下模板返回：
 
 前置 A 校验通过后，如果用户**尚未在任务描述中明确指定编写方式**，AI **必须主动提问**让用户在以下三种方式中选择一个。三种方式对应三条独立执行流程，流程不可互串。
 
-### 三选一菜单（AI 照抄提问）
+### 三选一菜单（AI 照抄提问，不要修改格式和任何内容）
 
 > 请选择本次用例的编写方式（回复数字即可）：
 >

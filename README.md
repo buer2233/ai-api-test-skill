@@ -1,6 +1,6 @@
-﻿# api-test-dwp
+# api-test-E10
 
-面向 `test-automation` 仓库的**接口自动化编写 Skill**，提供三种编写方式。
+`test-automation` 仓库**内置的接口自动化编写 Skill**（项目级，物理位置 `.claude/skills/api-test-E10/`），提供三种编写方式。
 AI 执行规范详见 [`SKILL.md`](./SKILL.md)，完整流程图详见 [`flow_chart/flow.md`](./flow_chart/flow.md)。
 
 ## 环境要求与安装
@@ -10,6 +10,8 @@ AI 执行规范详见 [`SKILL.md`](./SKILL.md)，完整流程图详见 [`flow_ch
 | OS | Windows 10/11 |
 | Python | ≥ 3.8 |
 | mitmproxy | `pip install mitmproxy`（验证：`mitmdump --version`） |
+
+Skill 已随 `test-automation` 仓库一起分发，clone 仓库后无需额外安装。Claude Code 会自动从项目 `.claude/skills/` 目录加载本 skill。
 
 ## 使用前：填写任务信息
 
@@ -27,7 +29,7 @@ AI 执行规范详见 [`SKILL.md`](./SKILL.md)，完整流程图详见 [`flow_ch
 - `[接口方法文件]` 与 `[接口方法位置]` **必须同时**填"当前用例无新增接口"，只填一项不合法
 - **例外**：纯查询/工具/诊断类对话不需要填
 
-> AI 在任务信息校验通过后，会自动从 `[接口用例文件]` 路径提取项目根（`E10自动化` 之前的那一截），写入 skill 根目录 `config.json` 的 `project_path` 字段。抓包与勾选工具会优先读取该配置定位 `api_test_dwp_temp/` 落地目录，避免因 CWD 不在项目内导致产物错落到 skill 自身目录。
+> 因 skill 已固定安装在 `<project>/.claude/skills/api-test-E10/`，项目根由 skill 自身位置直接推导，**不再需要 AI 在前置 A 通过后回写 `config.project_path`**。抓包与勾选工具自动把运行时产物落到 `<project>/api_test_dwp_temp/`。
 
 ## 三种编写方式
 
@@ -58,11 +60,11 @@ AI 执行规范详见 [`SKILL.md`](./SKILL.md)，完整流程图详见 [`flow_ch
 ## 目录结构
 
 ```
-api-test-dwp/
+api-test-E10/
 ├── README.md                     # 本文件（用户快速指南）
 ├── SKILL.md                      # AI 执行规范入口（前置门禁声明 + 方式分流 + 核心原则纲领）
 ├── doc/                          # 按需加载的拆分方案与辅助规范
-│   ├── preflight_gates.md         # 前置门禁详细执行手册（打回模板、固化项目根、三选一菜单）
+│   ├── preflight_gates.md         # 前置门禁详细执行手册（打回模板、三选一菜单）
 │   ├── core_principles.md         # 核心原则 1-5 详细规则（查重、索引维护、pytest 闭环）
 │   ├── mode_capture_driven.md     # 方式1：抓包驱动
 │   ├── mode_reference_case.md     # 方式2：参考已有用例
@@ -89,16 +91,18 @@ api-test-dwp/
 │   ├── scan_page_api.py          # 扫描 page_api 生成索引
 │   ├── match_captures.py         # 抓包 vs 索引 → 勾选草稿
 │   ├── check_capture_server.py   # 检测 12138 抓包服务器状态
-│   └── page_api_index.sqlite3    # SQLite 全局接口覆盖文档（纳入版本管理）
-├── utils/                        # 多模块共用的基础函数（复用规则见 CLAUDE.md / AGENTS.md）
-│   ├── project_root.py           # 项目根定位 + config.json 解析
+│   └── page_api_index.sqlite3    # SQLite 接口覆盖文档（纳入版本管理）
+├── skill_utils/                        # 多模块共用的基础函数（复用规则见 CLAUDE.md / AGENTS.md）
+│   ├── project_root.py           # 项目根定位（由 skill 自身位置推导）
 │   ├── common_function.py        # 通用配置更新等共享方法
 │   ├── api_index_db.py           # SQLite 索引读写
 │   └── api_path_match.py         # 抓包路径匹配规则
-└── config.json                   # 运行时配置（AI 写入 project_path / baseurl）
+├── hooks/                        # Claude Code PreToolUse hook
+│   └── preflight_hook.py         # 触发 preflight_check 并注入 additionalContext
+└── config.json                   # 运行时配置（baseurl / apiDataUpdateDate）
 ```
 
-> 运行时产物（`latest.jsonl`、`capture_selection.md`）落在**消费方项目**的 `api_test_dwp_temp/` 下，**不在** skill 自身目录。
+> 运行时产物（`latest.jsonl`、`capture_selection.md`）落在**项目根**的 `api_test_dwp_temp/` 下，**不在** skill 自身目录。
 
 ## 常见问题
 
@@ -110,11 +114,11 @@ api-test-dwp/
 
 **Q：抓包数据太多？** 在 `capture/allowed_prefixes.txt` 删减前缀，或在勾选草稿中只勾必要接口。
 
-**Q：抓包含敏感信息吗？** `Cookie`/`Authorization` 头仅保留前 20 字符 + 长度摘要，不落全量。建议定期清理消费方项目下的 `api_test_dwp_temp/latest.jsonl`。
+**Q：抓包含敏感信息吗？** `Cookie`/`Authorization` 头仅保留前 20 字符 + 长度摘要，不落全量。建议定期清理项目根下 `api_test_dwp_temp/latest.jsonl`。
 
 **Q：不想用抓包？** 可用方式②（参考已有用例）或方式③（cURL 手工）。
 
-**Q：抓包数据落到 skill 目录而不是项目目录？** 老问题，根因是工具沿 CWD 向上找 `E10自动化`，启动方式不对时会找不到。当前版本已支持显式配置：AI 在任务信息校验通过后会写入 `config.json` 的 `project_path`，工具优先读取该字段。如仍异常，手动检查 `<skill 根目录>/config.json` 是否包含正确的绝对路径，且该路径下确实存在 `E10自动化/` 子目录。
+**Q：抓包数据落到 skill 目录而不是项目目录？** 本版本 skill 已固定安装在 `<project>/.claude/skills/api-test-E10/`，项目根由 skill 位置直接推导。如发现产物落到 skill 目录，请确认目录路径符合该结构、且项目根下存在 `E10自动化` 子目录。
 
 ## 进一步阅读
 

@@ -30,12 +30,12 @@ _SKILL_ROOT = os.path.dirname(TOOLS_DIR)
 if _SKILL_ROOT not in sys.path:
     sys.path.insert(0, _SKILL_ROOT)
 
-from utils.project_root import (  # noqa: E402
+from skill_utils.project_root import (  # noqa: E402
     resolve_project_root,
     get_temp_dir,
 )
-from utils.api_index_db import get_default_db_path, load_methods  # noqa: E402
-from utils.api_path_match import api_path_matches  # noqa: E402
+from skill_utils.api_index_db import get_default_db_path, load_methods  # noqa: E402
+from skill_utils.api_path_match import api_path_matches  # noqa: E402
 
 
 INDEX_DB_PATH = get_default_db_path(TOOLS_DIR)
@@ -54,7 +54,7 @@ def _get_temp_dir() -> str:
     temp_dir = get_temp_dir(on_warn=_warn)
     if not temp_dir:
         print(
-            "ERROR: 未找到仓库根（含 E10自动化 目录），请确认当前工作目录在 test-automation 项目内，或在 skill 根目录 config.json 中配置 project_path",
+            "ERROR: 未找到项目根（含 E10自动化 目录）。请确认 skill 安装在 <project>/.claude/skills/api-test-E10/ 路径下。",
             file=sys.stderr,
         )
         return ""
@@ -225,7 +225,7 @@ def main():
 
     repo_root = _resolve_repo_root()
     if not repo_root:
-        print("ERROR: 未找到仓库根（含 E10自动化 目录），请确认当前工作目录在 test-automation 项目内，或在 skill 根目录 config.json 中配置 project_path", file=sys.stderr)
+        print("ERROR: 未找到项目根（含 E10自动化 目录）。请确认 skill 安装在 <project>/.claude/skills/api-test-E10/ 路径下。", file=sys.stderr)
         return 1
 
     temp_dir = _get_temp_dir()

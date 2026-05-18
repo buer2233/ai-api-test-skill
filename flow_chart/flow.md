@@ -1,4 +1,4 @@
-﻿# api-test-dwp 执行流程图
+# api-test-E10 执行流程图
 
 本文件使用 [Mermaid](https://mermaid.js.org/) 绘制。VSCode / GitHub / Obsidian / Typora 等均可直接渲染。
 
@@ -301,7 +301,7 @@ flowchart LR
 | 五、pytest 闭环 | 核心原则 → 5. 测试必须闭环 |
 | 六、对比速查 | 三种方式的共用规范 |
 | 七、决策闸门 | 前置必跑 0 + 前置必填 A / B 校验规则 |
-| 附录 A、Hook 触发时序 | 🚨 前置必跑 0（由 hook 自动执行）+ 用户级 `~/.claude/settings.json` 的 `hooks.PreToolUse` |
+| 附录 A、Hook 触发时序 | 🚨 前置必跑 0（由 hook 自动执行）+ 项目级 `.claude/settings.json` 的 `hooks.PreToolUse` |
 
 ---
 
@@ -315,9 +315,9 @@ flowchart LR
 
 ## 附录 A、PreToolUse Hook 触发时序图
 
-描述 AI 调用 `Skill({skill: "api-test-dwp"})` 时，Claude Code 如何同步拦截、spawn `preflight_hook.py`、并把 `preflight_check.py` 的结果注入 AI 上下文的完整链路。
+描述 AI 调用 `Skill({skill: "api-test-E10"})` 时，Claude Code 如何同步拦截、spawn `preflight_hook.py`、并把 `preflight_check.py` 的结果注入 AI 上下文的完整链路。
 
-> 配套实现：`hooks/preflight_hook.py` + 用户级 `~/.claude/settings.json` 的 `hooks.PreToolUse.matcher="Skill"`。
+> 配套实现：`hooks/preflight_hook.py` + 项目级 `.claude/settings.json` 的 `hooks.PreToolUse.matcher="Skill"`。
 
 ```mermaid
 sequenceDiagram
@@ -330,7 +330,7 @@ sequenceDiagram
 
     Note over AI,CC: 用户触发任务 → AI 决定调用 Skill 工具
 
-    AI->>CC: Skill({skill: "api-test-dwp"})
+    AI->>CC: Skill({skill: "api-test-E10"})
     Note over CC: 拦截工具调用<br/>查 settings.json<br/>命中 matcher: "Skill"
 
     CC->>HK: spawn 子进程<br/>cwd=会话CWD<br/>stdin=JSON{tool_name, tool_input.skill, cwd, ...}
@@ -338,10 +338,10 @@ sequenceDiagram
 
     HK->>HK: 读 stdin 并解析 tool_input.skill
 
-    alt skill != "api-test-dwp"
+    alt skill != "api-test-E10"
         HK-->>CC: exit 0（无 stdout 输出）
         Note over CC: 直接放行<br/>不影响其它 skill
-    else skill == "api-test-dwp"
+    else skill == "api-test-E10"
         HK->>PF: subprocess.run(preflight_check.py)<br/>PYTHONIOENCODING=utf-8<br/>timeout=120s
         activate PF
         PF->>FS: 读 config.json.apiDataUpdateDate
@@ -386,7 +386,7 @@ sequenceDiagram
 ### 关键设计取舍
 
 - **永不阻断**：即便 preflight 自己崩了，hook 也 exit 0；宁可让 AI 看到诊断信息自行判断，也不要因 hook 故障让 skill 整个不可用。如需强制阻断，把 hook 末尾改成按 `result.returncode` 决定 exit 2。
-- **二次过滤放在脚本里**：`matcher: "Skill"` 在 settings 层只能按工具名匹配，无法区分具体 skill 名；脚本内 `skill_name == "api-test-dwp"` 这层过滤是必须的，否则任何 Skill 调用都会触发 preflight。
-- **CWD 取 payload.cwd**：preflight 子进程的 CWD 是用户会话 CWD（消费方项目），不是 hook 脚本所在目录——这样 `utils/project_root.py` 的 fallback 路径搜索能正确落到消费方项目。
+- **二次过滤放在脚本里**：`matcher: "Skill"` 在 settings 层只能按工具名匹配，无法区分具体 skill 名；脚本内 `skill_name == "api-test-E10"` 这层过滤是必须的，否则任何 Skill 调用都会触发 preflight。
+- **CWD 取 payload.cwd**：preflight 子进程的 CWD 是用户会话 CWD（消费方项目），不是 hook 脚本所在目录——这样 `skill_utils/project_root.py` 的 fallback 路径搜索能正确落到消费方项目。
 
 

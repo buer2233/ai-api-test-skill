@@ -1,6 +1,5 @@
 {
-  "project_path": "",
-  "baseurl": "",
-  "apiDataUpdateDate": "2026-05-12",
+  "baseurl": "10.10.28.64:10600",
+  "apiDataUpdateDate": "2026-05-18",
   "multi_capture": 1
 }
