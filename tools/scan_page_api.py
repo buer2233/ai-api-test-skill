@@ -75,21 +75,21 @@ URL_EXTRACT_RULES = [
     {
         "name": "quoted_http_url",
         "pattern": re.compile(
-            r"(?i)(?:[rubf]*)(['\"])https?://(?:\{[^'\"]+?\}|[^'\"]*?)(/[^'\"?\s]+)\1"
+            r"(?i)(?:[rubf]*)(['\"])https?://(?:\{[^'\"]+?\}|[^'\"]*?)(/[^'\"?\s]+(?:\?[^'\"]+)?)\1"
         ),
         "group": 2,
     },
     {
         "name": "concat_http_url_path",
         "pattern": re.compile(
-            r"(?i)(?:[rubf]*)(['\"])https?://\1\s*\+\s*[^\n]+?\+\s*(?:[rubf]*)(['\"])(/[^'\"?\s]+)\2"
+            r"(?i)(?:[rubf]*)(['\"])https?://\1\s*\+\s*[^\n]+?\+\s*(?:[rubf]*)(['\"])(/[^'\"?\s]+(?:\?[^'\"]+)?)\2"
         ),
         "group": 3,
     },
     {
         "name": "url_assignment_path_literal",
         "pattern": re.compile(
-            r"(?i)\burl\s*=\s*(?:[rubf]*)(['\"])[^'\"]*?(/(?:api|sapi|base|papi|ipconfigrec|tenantlogo|app)/[^'\"?\s]+)\1"
+            r"(?i)\burl\s*=\s*(?:[rubf]*)(['\"])[^'\"]*?(/(?:api|sapi|base|papi|ipconfigrec|tenantlogo|app)/[^'\"?\s]+(?:\?[^'\"]+)?)\1"
         ),
         "group": 2,
     },
