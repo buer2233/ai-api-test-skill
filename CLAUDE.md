@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 仓库性质
 
-本目录是一个 **Claude Code Skill**（`api-test-E10`），**项目级**，固定安装在 `test-automation` 仓库的 `.claude/skills/api-test-E10/` 路径下，随仓库一起分发。它的工作是驱动同一仓库内 `E10自动化/接口自动化测试/` 的接口测试编写。绝大多数"源代码"是 Markdown 规范，只有 `tools/`、`capture/`、`skill_utils/`、`hooks/` 目录里有 Python。
+本目录是一个 **Claude Code / Codex Skill**(`api-test-E10`)，**项目级**，固定安装在 `test-automation` 仓库的 `.claude/skills/api-test-E10/` 路径下，随仓库一起分发。它的工作是驱动同一仓库内 `E10自动化/接口自动化测试/` 的接口测试编写。绝大多数"源代码"是 Markdown 规范，只有 `tools/`、`capture/`、`skill_utils/`、`hooks/` 目录里有 Python。
 
 用户触发本 skill 时，期望你把 `SKILL.md` 当作执行手册严格遵循，而不是去重构它。本仓库内的"代码改动"主要形式是文档编辑。
 
@@ -26,7 +26,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `doc/maintenance_prompt_context.md` + `doc/mode_maintenance_*.md` —— 维护任务专用上下文与四种维护方案，其中方式4为 pytest 报错驱动维护。
 - `doc/coding_style_guide.md` —— **按需加载**，仅在编写接口方法 / 用例代码前 Read。
 - `doc/high_frequency_experience.md` —— 仅在踩到对应坑（Codex apply_patch、`show_list`、参数化与断言同步等）时加载。
-- `flow_chart/flow.md` 与同目录 PNG —— Mermaid 源码与导出图。`flow.md` 实质变化时才更新 PNG。
+- `flow_chart/flow.md` 与同目录 PNG —— Mermaid 源码与导出图。当前导出图覆盖前置 hook、主流程、前置门禁、新增总览、新增三方式、维护总览、维护四方式、pytest 闭环。`flow.md` 实质变化时才更新 PNG。
 - 第三方依赖 Skill：维护方式4默认优先使用 `/test-fixing`；只有 `/test-fixing` 无法解决、维护遇到困难或前后接口/调用栈信息不明确时，才使用 `/Debugging` 断点调试辅助定位。
 
 避免在多个文档间复制策略。这种拆分的目的就是让 `SKILL.md` 保持每次会话固定加载、其余按需拉取。
@@ -126,6 +126,8 @@ python tools/match_captures.py --jsonl path/to/latest.jsonl
 .claude/skills/api-test-E10/
 ├── README.md                     # 用户快速指南
 ├── SKILL.md                      # AI 执行规范入口（前置门禁 + 方式分流）
+├── AGENTS.md                     # Codex/Agent 协作规则
+├── CLAUDE.md                     # Claude Code 协作规则
 ├── doc/                          # 按需加载的拆分方案与辅助规范
 │   ├── preflight_gates_new.md     # 新增任务前置门禁详细执行手册
 │   ├── preflight_gates_maintenance.md # 维护任务前置门禁详细执行手册
@@ -140,15 +142,21 @@ python tools/match_captures.py --jsonl path/to/latest.jsonl
 │   ├── mode_maintenance_pytest_driven.md # 维护方式4：pytest 报错驱动
 │   ├── coding_style_guide.md      # 接口方法/用例编码风格规范
 │   └── high_frequency_experience.md # 高频踩坑经验
-├── .gitignore                    # 忽略运行时产物
 ├── flow_chart/                   # 流程图（Mermaid 源码 + 导出 PNG）
 │   ├── flow.md
+│   ├── 0.前置hook执行扫描新增接口数据.png
 │   ├── 1.主流程图.png
 │   ├── 2.前置操作的门禁要求.png
-│   ├── 3.推荐方式1-抓包驱动.png
-│   ├── 4.推荐方式2-参考已有用例.png
-│   ├── 5.补充方式3-手工复制cURL.png
-│   └── 6.pytest执行闭环.png
+│   ├── 3.新增任务总览.png
+│   ├── 4.推荐方式1-抓包驱动.png
+│   ├── 5.推荐方式2-参考已有用例.png
+│   ├── 6.补充方式3-手工复制cURL.png
+│   ├── 7.用例维护的主流程.png
+│   ├── 8.维护方式1-抓包驱动.png
+│   ├── 9.维护方式2-参考已有用例.png
+│   ├── 10.维护方式3-cURL 手工.png
+│   ├── 11.维护方式4-pytest 报错驱动.png
+│   └── 12.pytest执行闭环.png
 ├── capture/                      # 抓包底座（方式①）
 │   ├── README.md
 │   ├── start.bat
@@ -157,6 +165,7 @@ python tools/match_captures.py --jsonl path/to/latest.jsonl
 │   ├── capture_addon.py
 │   └── allowed_prefixes.txt
 ├── tools/                        # 索引与匹配工具（各方式共用）
+│   ├── _scan_summary.py          # 扫描结果摘要辅助模块
 │   ├── preflight_check.py        # skill 入口前置：接口数据时效检查
 │   ├── scan_page_api.py          # 扫描 page_api 生成索引
 │   ├── match_captures.py         # 抓包 vs 索引 → 勾选草稿

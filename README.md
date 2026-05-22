@@ -29,10 +29,12 @@ AI 执行规范详见 [`SKILL.md`](./SKILL.md)，完整流程图详见 [`flow_ch
 - `[接口方法位置]` = `填写接口方法新增位置，例如：文件末尾 / 第123行后 / 某方法后`（无新增时填：当前用例无新增接口）
 - `[接口用例文件]` = `填写接口用例所在文件路径`
 - `[接口用例位置]` = `填写接口用例新增位置，例如：文件末尾 / 第456行插入 / 某用例后/ 完善某用例`
+- `[fixture]` = `选填：接口用例的前后置fixture`
 - `[用例名]` = `填写本次新增用例的完整中文功能名称`
 ```
 
 - `[接口方法文件]` 与 `[接口方法位置]` **必须同时**填"当前用例无新增接口"，只填一项不合法
+- `[fixture]` 为选填项，可省略或留空，不参与缺项判定
 
 ### 维护用例任务
 
@@ -100,6 +102,8 @@ AI 会先判断本次任务是：
 api-test-E10/
 ├── README.md                     # 本文件（用户快速指南）
 ├── SKILL.md                      # AI 执行规范入口（前置门禁声明 + 方式分流 + 核心原则纲领）
+├── AGENTS.md                     # Codex/Agent 协作规则
+├── CLAUDE.md                     # Claude Code 协作规则
 ├── doc/                          # 按需加载的拆分方案与辅助规范
 │   ├── preflight_gates_new.md     # 新增任务前置门禁详细执行手册（5 项必填 + 三选一菜单）
 │   ├── preflight_gates_maintenance.md # 维护任务前置门禁详细执行手册（2 项必填 + 四选一菜单）
@@ -114,15 +118,21 @@ api-test-E10/
 │   ├── mode_maintenance_pytest_driven.md # 维护方式4：pytest 报错驱动
 │   ├── coding_style_guide.md      # 接口方法/用例编码风格规范
 │   └── high_frequency_experience.md # 高频踩坑经验
-├── .gitignore                    # 忽略运行时产物
 ├── flow_chart/                   # 流程图（Mermaid 源码 + 导出 PNG）
 │   ├── flow.md                   # 完整流程图与决策树（Mermaid 源码）
+│   ├── 0.前置hook执行扫描新增接口数据.png
 │   ├── 1.主流程图.png
 │   ├── 2.前置操作的门禁要求.png
-│   ├── 3.推荐方式1-抓包驱动.png
-│   ├── 4.推荐方式2-参考已有用例.png
-│   ├── 5.补充方式3-手工复制cURL.png
-│   └── 6.pytest执行闭环.png
+│   ├── 3.新增任务总览.png
+│   ├── 4.推荐方式1-抓包驱动.png
+│   ├── 5.推荐方式2-参考已有用例.png
+│   ├── 6.补充方式3-手工复制cURL.png
+│   ├── 7.用例维护的主流程.png
+│   ├── 8.维护方式1-抓包驱动.png
+│   ├── 9.维护方式2-参考已有用例.png
+│   ├── 10.维护方式3-cURL 手工.png
+│   ├── 11.维护方式4-pytest 报错驱动.png
+│   └── 12.pytest执行闭环.png
 ├── capture/                      # 抓包底座（方式①）
 │   ├── README.md                 # 抓包配置详细指引（证书安装等）
 │   ├── start.bat                 # 一键启动 12138
@@ -131,9 +141,11 @@ api-test-E10/
 │   ├── capture_addon.py          # mitmdump 插件（过滤 + 落盘 JSONL）
 │   └── allowed_prefixes.txt      # 用户可扩展的 URL 过滤前缀
 ├── tools/                        # 索引与匹配工具（各方式共用）
+│   ├── _scan_summary.py          # 扫描结果摘要辅助模块
 │   ├── scan_page_api.py          # 扫描 page_api 生成索引
 │   ├── match_captures.py         # 抓包 vs 索引 → 勾选草稿
 │   ├── check_capture_server.py   # 检测 12138 抓包服务器状态
+│   ├── preflight_check.py        # 入口前置：接口数据时效检查
 │   └── page_api_index.sqlite3    # SQLite 接口覆盖文档（纳入版本管理）
 ├── skill_utils/                        # 多模块共用的基础函数（复用规则见 CLAUDE.md / AGENTS.md）
 │   ├── project_root.py           # 项目根定位（由 skill 自身位置推导）
