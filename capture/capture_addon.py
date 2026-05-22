@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Author: dengwanpeng
 
-"""api-test-dwp mitmdump addon
+"""api-test-E10 mitmdump addon
 
 功能：
 - 从仓库 RunConfig.baseurl 读取目标域名
@@ -33,9 +33,10 @@ if _SKILL_ROOT not in sys.path:
 
 from mitmproxy import ctx, http  # noqa: E402
 
-from utils.common_function import update_skill_config  # noqa: E402
-from utils.project_root import (  # noqa: E402
+from skill_utils.common_function import update_skill_config  # noqa: E402
+from skill_utils.project_root import (  # noqa: E402
     DEFAULT_CONFIG_PATH,
+    TEMP_DIR_NAME,
     resolve_project_root,
 )
 
@@ -44,16 +45,15 @@ PREFIX_FILE = os.path.join(ADDON_DIR, "allowed_prefixes.txt")
 
 
 def _warn(msg: str) -> None:
-    ctx.log.warn(f"[api-test-dwp] {msg}")
+    ctx.log.warn(f"[api-test-E10] {msg}")
 
 
 def _info(msg: str) -> None:
-    ctx.log.info(f"[api-test-dwp] {msg}")
+    ctx.log.info(f"[api-test-E10] {msg}")
 
 
 def _resolve_repo_root() -> Optional[str]:
     return resolve_project_root(
-        config_path=DEFAULT_CONFIG_PATH,
         on_warn=_warn,
         on_info=_info,
     )
@@ -108,15 +108,15 @@ MAX_BODY_BYTES = 1024 * 1024  # 1MB
 
 
 # -------------------- 仓库根与临时目录 --------------------
-# 项目根定位与 config.json 解析统一抽到 utils.project_root，本文件不再保留副本。
+# 项目根定位统一抽到 skill_utils.project_root；本文件不再保留副本。
 
 def _get_jsonl_path() -> str:
-    """返回捕获 JSONL 的落地路径，确保 api_test_dwp_temp 目录存在。"""
+    """返回捕获 JSONL 的落地路径，确保产物目录存在。"""
     repo_root = _resolve_repo_root()
     if not repo_root:
-        # 无法定位项目根时回退到 skill 目录
+        # 无法定位项目根时回退到 skill 目录（极少出现，仅作为兜底）
         return os.path.join(ADDON_DIR, "latest.jsonl")
-    temp_dir = os.path.join(repo_root, "api_test_dwp_temp")
+    temp_dir = os.path.join(repo_root, TEMP_DIR_NAME)
     os.makedirs(temp_dir, exist_ok=True)
     return os.path.join(temp_dir, "latest.jsonl")
 
@@ -129,7 +129,7 @@ def _parse_baseurl_from_config(config_path: str) -> Optional[str]:
         with open(config_path, "r", encoding="utf-8") as f:
             tree = ast.parse(f.read(), filename=config_path)
     except Exception as e:
-        ctx.log.warn(f"[api-test-dwp] 解析 config.py 失败: {e}")
+        ctx.log.warn(f"[api-test-E10] 解析 config.py 失败: {e}")
         return None
 
     for node in ast.walk(tree):
@@ -158,15 +158,15 @@ def _save_baseurl_to_skill_config(baseurl: str) -> None:
 def _load_baseurl() -> str:
     repo_root = _resolve_repo_root()
     if not repo_root:
-        _warn("未找到仓库根（含 E10自动化 目录），请确认当前工作目录在 test-automation 项目内，或在 skill 根目录 config.json 中配置 project_path")
+        _warn("未找到项目根（skill 未安装在 <project>/.claude/skills/api-test-E10/ 路径下，或项目根缺少 E10自动化 子目录）")
         return ""
     config_path = os.path.join(repo_root, "E10自动化", "接口自动化测试", "config.py")
     if not os.path.isfile(config_path):
-        ctx.log.warn(f"[api-test-dwp] 未找到 config.py: {config_path}")
+        ctx.log.warn(f"[api-test-E10] 未找到 config.py: {config_path}")
         return ""
     baseurl = _parse_baseurl_from_config(config_path)
     if not baseurl:
-        ctx.log.warn("[api-test-dwp] AST 解析 baseurl 未命中，使用空串（不做 host 过滤）")
+        ctx.log.warn("[api-test-E10] AST 解析 baseurl 未命中，使用空串（不做 host 过滤）")
         return ""
     baseurl = baseurl.strip()
     _save_baseurl_to_skill_config(baseurl)
@@ -182,7 +182,7 @@ def _load_prefixes() -> List[str]:
         prefixes = [ln for ln in lines if ln and not ln.startswith("#")]
         return prefixes or list(DEFAULT_PREFIXES)
     except Exception as e:
-        ctx.log.warn(f"[api-test-dwp] 读取 allowed_prefixes.txt 失败: {e}")
+        ctx.log.warn(f"[api-test-E10] 读取 allowed_prefixes.txt 失败: {e}")
         return list(DEFAULT_PREFIXES)
 
 
@@ -239,9 +239,9 @@ class ApiCaptureAddon:
         self.prefixes = _load_prefixes()
         self.jsonl_path = _get_jsonl_path()
         self._ensure_jsonl()
-        ctx.log.info(f"[api-test-dwp] self.baseurl = {self.baseurl or '<empty>'}")
-        ctx.log.info(f"[api-test-dwp] self.prefixes = {self.prefixes}")
-        ctx.log.info(f"[api-test-dwp] self.jsonl_path = {self.jsonl_path}")
+        ctx.log.info(f"[api-test-E10] self.baseurl = {self.baseurl or '<empty>'}")
+        ctx.log.info(f"[api-test-E10] self.prefixes = {self.prefixes}")
+        ctx.log.info(f"[api-test-E10] self.jsonl_path = {self.jsonl_path}")
 
     def _ensure_jsonl(self):
         if not os.path.isfile(self.jsonl_path):
@@ -362,7 +362,7 @@ class ApiCaptureAddon:
             with open(self.jsonl_path, "a", encoding="utf-8") as f:
                 f.write(line + "\n")
         except Exception as e:
-            ctx.log.warn(f"[api-test-dwp] 落盘异常: {e}")
+            ctx.log.warn(f"[api-test-E10] 落盘异常: {e}")
 
 
 addons = [ApiCaptureAddon()]

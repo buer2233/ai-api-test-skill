@@ -37,9 +37,9 @@
 
 - 新增接口方法前，先按 **URL 的 pure_path** 搜索仓库内是否已有实现
 - **优先使用 `tools/page_api_index.sqlite3`**（由 `scan_page_api.py` 生成，纳入版本管理）：
-  - 按 `api_url` + `method` 命中即视为已实现；路径含 `{1}` 等变量时按 `utils/api_path_match.py` 的规则匹配
+  - 按 `api_url` + `method` 命中即视为已实现；路径含 `{1}` 等变量时按 `skill_utils/api_path_match.py` 的规则匹配
   - 索引条目包含 `api_name`、`api_desc`、`Author`、`Create Date`、`Update Date`、`method`、`class`、`bases`，可判断方法来源
-  - 索引时效由前置 0 hook 自动管理（7 天阈值，详见 `doc/preflight_gates.md`「前置必跑 0」）；AI 不再单独判断 24 小时；只在自己手工新增了接口方法后，仍需立即跑一次 `scan_page_api.py` 刷新
+  - 索引时效由前置 0 hook 自动管理（7 天阈值，详见 `doc/preflight_gates_new.md` / `doc/preflight_gates_maintenance.md`「前置必跑 0」）；AI 不再单独判断 24 小时；只在自己手工新增了接口方法后，仍需立即跑一次 `scan_page_api.py` 刷新
 - 索引不可用时回退到 grep 搜索，覆盖 `.format()` / `+` 拼接 / f-string 三种 URL 写法
 - 搜索范围不要只看当前文件，也要考虑父类、兄弟 API 文件、被当前测试类实例实际继承的 API 类
 
@@ -56,7 +56,7 @@
 
 1. **扫描新增**：运行 `tools/scan_page_api.py`——库为空时全量重建（id 从 1 起）；库非空时全量扫描后按 `Create Date` 取最近 30 天，与现有 `(api_url, method)` 比对，仅追加新接口
 2. **强制重建**：`python tools/scan_page_api.py --full` 清空并重写整表，id 重新从 1 编号
-3. **规则扩展**：URL 抽取在 `scan_page_api.py` 的 `URL_EXTRACT_RULES` 追加；HTTP method 抽取在 `REQUEST_METHOD_RULES` 追加（已覆盖 `requests.xxx(...)`、`requests.request("METHOD", ...)`、`self.send_msg("get"/"post", ...)`）；URL 抓包匹配在 `utils/api_path_match.py` 追加
+3. **规则扩展**：URL 抽取在 `scan_page_api.py` 的 `URL_EXTRACT_RULES` 追加；HTTP method 抽取在 `REQUEST_METHOD_RULES` 追加（已覆盖 `requests.xxx(...)`、`requests.request("METHOD", ...)`、`self.send_msg("get"/"post", ...)`）；URL 抓包匹配在 `skill_utils/api_path_match.py` 追加
 
 ---
 
@@ -72,8 +72,9 @@
 
 - 完成代码后必须执行 `pytest`，**默认必须跑到新增用例通过才算完成**（除非用户在当前对话中明确强调不需要跑 pytest）
 - 执行前先确认工作目录与 `PYTHONPATH`：
-  - 工作目录：`\test-automation\E10自动化\接口自动化测试`
-  - `PYTHONPATH`：`\test-automation\E10自动化\接口自动化测试;\test-automation\E10自动化\接口自动化测试\test_case`
+  - 工作目录：`\test-automation\E10自动化\接口自动化测试\test_case`
+  - `PYTHONPATH`：`.`（当前目录，即 `test_case`）
+  - 原因：`conftest.py` 使用 `sys.path.append(os.getcwd())` 动态添加路径，`page_api` 模块位于 `test_case` 目录下
 - 记录执行目录、`PYTHONPATH`、执行命令、关键日志、报错信息、最终结果
 - 如果失败，必须根据真实报错定位并修复，直到通过
 - 如果最终通过依赖特定工作目录或 `PYTHONPATH`，必须明确说明

@@ -1,4 +1,4 @@
-﻿# capture - 抓包底座使用指引
+# capture - 抓包底座使用指引
 
 > 目标读者：首次使用本 Skill 的测试同学；零 mitmproxy 基础也能跟完。
 
@@ -33,21 +33,21 @@ mitmdump --version
 或命令行：
 
 ```bat
-cd api-test-dwp\capture
+cd api-test-E10\capture
 mitmdump -s capture_addon.py --listen-port 12138
 ```
 
 ### 2.2 看到以下日志表示成功
 
 ```
-[api-test-dwp] self.baseurl = weapp.mulinquan.cn
-[api-test-dwp] self.prefixes = ['/api/', '/sapi/', ...]
-[api-test-dwp] self.jsonl_path = ...\api_test_dwp_temp\latest.jsonl
+[api-test-E10] self.baseurl = weapp.mulinquan.cn
+[api-test-E10] self.prefixes = ['/api/', '/sapi/', ...]
+[api-test-E10] self.jsonl_path = ...\api_test_dwp_temp\latest.jsonl
 Proxy server listening at *:12138
 ```
 
 **如果 `self.baseurl = <empty>`**：说明没找到 `E10自动化/接口自动化测试/config.py`，或其 `RunConfig.baseurl` 被注释。请手动打开 config.py 确认当前启用的 baseurl 没被井号注释。
-启动成功后，addon 会通过 `utils/common_function.py` 的通用配置更新方法，把当前解析到的 `RunConfig.baseurl` 同步写入 skill 根目录 `config.json` 的 `baseurl` 字段，便于后续工具读取当前抓包环境。
+启动成功后，addon 会通过 `skill_utils/common_function.py` 的通用配置更新方法，把当前解析到的 `RunConfig.baseurl` 同步写入 skill 根目录 `config.json` 的 `baseurl` 字段，便于后续工具读取当前抓包环境。
 
 ## 3. 安装 CA 证书（关键一步）
 
@@ -118,7 +118,7 @@ mitmproxy 需要把根证书装到 Windows 受信任根，才能解密 HTTPS。
 
 配好证书和浏览器代理后，直接对 Claude Code 说：
 
-> "帮我启动 api-test-dwp 抓包"
+> "帮我启动 api-test-E10 抓包"
 
 AI 会：
 1. 运行 `tools/check_capture_server.py` 检查 12138
