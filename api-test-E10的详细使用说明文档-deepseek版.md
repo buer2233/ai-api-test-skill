@@ -27,7 +27,7 @@
 | Python | 3.8 及以上 |
 | 账号 | DeepSeek 开发者账号 |
 | 工具 | Claude Code、CC Switch、PyCharm CC GUI 插件 |
-| Skill | `api-test-dwp` |
+| Skill | `api-test-E10`；维护方式 4 依赖 `/test-fixing` 和 `/Debugging` |
 
 
 ## 需要提前准备的信息
@@ -35,7 +35,8 @@
 
 + DeepSeek 开发者账号。
 + DeepSeek API Key。
-+ `api-test-dwp` Skill 所在路径，例如：`C:\Users\admin\.claude\skills\api-test-dwp`。
++ `api-test-E10` Skill 所在路径，例如：`C:\Users\admin\.claude\skills\api-test-E10`。
++ 第三方依赖 Skill：`/test-fixing`、`/Debugging`。其中 `/test-fixing` 是维护方式 4 的默认修复流程，`/Debugging` 只在测试修复无法解决或调用栈/前后接口信息不明确时使用。
 
 # 二、工具和账号配置
 ## 1. 安装 Claude Code（Windows）
@@ -259,10 +260,10 @@ claude
 处理：检查模型名是否填写为 `deepseek-chat` 或团队指定模型名。
 
 # 三、接口自动化用例编写
-## 1. 准备 `api-test-dwp` Skill
+## 1. 准备 `api-test-E10` Skill
 ### 1.1 手动复制Skill 文件到claude目录下
 ```powershell
-dir C:\Users\admin\.claude\skills\api-test-dwp
+dir C:\Users\admin\.claude\skills\api-test-E10
 ```
 
 ### 1.2 确认接口自动化项目结构
@@ -276,16 +277,16 @@ E10自动化\接口自动化测试
 3. 确认 `config.py` 中当前启用的 `RunConfig.baseurl` 与浏览器访问的被测环境域名一致。
 
 ### 1.3 在 Claude Code / CC GUI 中触发 Skill
-在 CC GUI 对话中说明要使用 `api-test-dwp` Skill，例如：
+在 CC GUI 对话中说明要使用 `api-test-E10` Skill，例如：
 
 ```latex
-请使用 api-test-dwp Skill 帮我编写接口自动化用例。
+请使用 api-test-E10 Skill 帮我编写接口自动化用例。
 ```
 
 如果你的环境需要显式引用 Skill 路径，可补充：
 
 ```latex
-Skill 路径：C:\Users\admin\.claude\skills\api-test-dwp
+Skill 路径：C:\Users\admin\.claude\skills\api-test-E10
 ```
 
 ## 2. 使用 CC GUI 编写接口自动化用例
@@ -296,8 +297,10 @@ Skill 路径：C:\Users\admin\.claude\skills\api-test-dwp
 4. <font style="color:#000000;">CC GUI设置-供应商管理-选择</font>**<font style="color:#000000;">使用本地配置信息</font>**
 5. <font style="color:#000000;">CC GUI设置-SKD依赖,确认</font>**<font style="color:#000000;">Claude Code SDK可用</font>**
 
-### 2.2 每次编写用例前必须提供 5 项任务信息
-正式新增或修改接口方法、接口用例前，必须先把下面 5 项发给 AI。缺任意一项，Skill 会要求你补充。
+### 2.2 按任务类型提供前置信息
+正式新增或维护接口方法、接口用例前，先确认本次任务类型。新增任务必须提供 5 项；维护任务只强制提供 2 项。
+
+#### 新增任务：必须提供 5 项
 
 ```markdown
 # 本次任务信息
@@ -308,15 +311,26 @@ Skill 路径：C:\Users\admin\.claude\skills\api-test-dwp
 - `[用例名]` = `填写本次新增用例的完整中文功能名称`
 ```
 
+#### 维护任务：只强制提供 2 项
+
+```markdown
+# 本次维护任务信息
+- `[接口用例文件]` = `填写接口用例所在文件路径`
+- `[接口用例位置]` = `填写具体的待维护的单个/多个用例，例如：test_xxx / 某测试类下的多个用例 / 第456行附近的 xxx 用例`
+```
+
 ### 2.3 重要填写规则
 + `[接口方法文件]` 与 `[接口方法位置]` 必须同时填写真实内容，或同时填写 `当前用例无新增接口`。
 + 不能保留 `填写接口方法所在文件路径` 这类占位符原文。
-+ `[用例名]` 要写完整中文功能名，不要只写英文缩写或简单编号。
-+ 如果是纯查询、检查环境、启动抓包，不需要填写 5 项任务信息。
-+ 一旦进入“新增 / 修改接口方法或用例”阶段，必须补齐 5 项任务信息。
++ 新增任务的 `[用例名]` 要写完整中文功能名，不要只写英文缩写或简单编号。
++ 维护任务不强制要求 `[接口方法文件]` / `[接口方法位置]` / `[用例名]`，除非定位后确认必须修改接口方法且无法从现有用例反查。
++ 如果是纯查询、检查环境、启动抓包，不需要填写任务信息。
++ 一旦进入“新增 / 维护接口方法或用例”阶段，必须按任务类型补齐对应信息。
 
-## 3. 三种用例编写方式总览
-`api-test-dwp` Skill 支持三种方式：
+## 3. 用例编写/维护方式总览
+`api-test-E10` Skill 支持新增三种方式、维护四种方式。
+
+### 新增任务三种方式
 
 | 方式 | 名称 | 适合场景 | 需要你提供 |
 | --- | --- | --- | --- |
@@ -325,7 +339,18 @@ Skill 路径：C:\Users\admin\.claude\skills\api-test-dwp
 | 方式 3 | cURL 手工 | 抓包不可用、接口数量少、能手动复制请求响应 | cURL、响应体、业务说明 |
 
 
-如果你没有指定方式，Skill 会让你回复 `1`、`2` 或 `3` 选择。
+如果你没有指定新增方式，Skill 会让你回复 `1`、`2` 或 `3` 选择。
+
+### 维护任务四种方式
+
+| 方式 | 名称 | 适合场景 | 需要你提供 |
+| --- | --- | --- | --- |
+| 方式 1 | 抓包驱动 | 业务链路变化较大、多接口联动、需要同步最新请求路径 | 最新抓包或 UI 操作 |
+| 方式 2 | 参考已有用例 | 同类用例结构稳定，只改参数、fixture、断言或调用方式 | 参考用例或同类样本 |
+| 方式 3 | cURL 手工 | 少量接口变更明确，不需要完整抓包回溯 | cURL、响应体、差异说明 |
+| 方式 4 | pytest 报错驱动 | 只指定待维护用例，让 AI 直接跑 pytest，按最后一个中断报错分类；用例待维护时优先 `/test-fixing`，必要时 `/Debugging` 断点定位 | `[接口用例文件]` 和 `[接口用例位置]` |
+
+如果你没有指定维护方式，Skill 会让你回复 `1`、`2`、`3` 或 `4` 选择。
 
 ## 4. 方式 1：抓包驱动编写用例
 抓包服务的完整教程请以本仓库文件为准：[`capture/README.md`](./capture/README.md)。该文件包含 Python、mitmproxy、证书安装、浏览器代理、抓包验证、停止抓包等完整步骤。
@@ -360,7 +385,7 @@ mitmdump --version
 4. 启动抓包：
 
 ```powershell
-cd C:\Users\admin\.claude\skills\api-test-dwp\capture
+cd C:\Users\admin\.claude\skills\api-test-E10\capture
 mitmdump -s capture_addon.py --listen-port 12138
 ```
 
@@ -378,7 +403,7 @@ mitmdump -s capture_addon.py --listen-port 12138
 在 CC GUI 中发送：
 
 ```markdown
-请使用 api-test-dwp Skill，按方式1：抓包驱动，帮我编写接口自动化用例。
+请使用 api-test-E10 Skill，按方式1：抓包驱动，帮我编写接口自动化用例。
 
 # 本次任务信息
 - `[接口方法文件]` = `E10自动化/接口自动化测试/page_api/【待补充：接口方法文件】.py`
@@ -392,7 +417,7 @@ mitmdump -s capture_addon.py --listen-port 12138
 继续发送：
 
 ```latex
-请检查 api-test-dwp 抓包服务是否已启动；如果未启动，请帮我启动抓包服务。
+请检查 api-test-E10 抓包服务是否已启动；如果未启动，请帮我启动抓包服务。
 ```
 
 #### 步骤 3：你在浏览器中完成业务操作
@@ -435,7 +460,7 @@ api_test_dwp_temp/capture_selection.md
 
 ### 4.4 方式 1 完整提示词模板
 ```markdown
-请使用 api-test-dwp Skill，按方式1：抓包驱动，帮我编写接口自动化用例。
+请使用 api-test-E10 Skill，按方式1：抓包驱动，帮我编写接口自动化用例。
 
 # 本次任务信息
 - `[接口方法文件]` = `E10自动化/接口自动化测试/page_api/【待补充】.py`
@@ -482,7 +507,7 @@ api_test_dwp_temp/capture_selection.md
 
 #### 步骤 3：发送方式 2 提示词
 ```markdown
-请使用 api-test-dwp Skill，按方式2：参考已有用例，帮我编写接口自动化用例。
+请使用 api-test-E10 Skill，按方式2：参考已有用例，帮我编写接口自动化用例。
 
 # 本次任务信息
 - `[接口方法文件]` = `当前用例无新增接口`
@@ -519,7 +544,7 @@ AI 可能会要求补充：
 
 ### 5.3 方式 2 完整提示词模板
 ```markdown
-请使用 api-test-dwp Skill，按方式2：参考已有用例，帮我编写接口自动化用例。
+请使用 api-test-E10 Skill，按方式2：参考已有用例，帮我编写接口自动化用例。
 
 # 本次任务信息
 - `[接口方法文件]` = `当前用例无新增接口`
@@ -582,7 +607,7 @@ AI 可能会要求补充：
 
 #### 步骤 2：发送方式 3 提示词
 ```markdown
-请使用 api-test-dwp Skill，按方式3：cURL 手工，帮我编写接口自动化用例。
+请使用 api-test-E10 Skill，按方式3：cURL 手工，帮我编写接口自动化用例。
 
 # 本次任务信息
 - `[接口方法文件]` = `E10自动化/接口自动化测试/page_api/【待补充：接口方法文件】.py`
@@ -630,7 +655,7 @@ AI 可能会要求补充：
 
 ### 6.4 方式 3 完整提示词模板
 ```markdown
-请使用 api-test-dwp Skill，按方式3：cURL 手工，帮我编写接口自动化用例。
+请使用 api-test-E10 Skill，按方式3：cURL 手工，帮我编写接口自动化用例。
 
 # 本次任务信息
 - `[接口方法文件]` = `E10自动化/接口自动化测试/page_api/【待补充】.py`
@@ -673,7 +698,7 @@ pytest E10自动化\接口自动化测试\test_case\【待补充：用例文件�
 把失败日志完整发给 CC GUI，并说明：
 
 ```latex
-这是刚才新增用例的 pytest 失败日志，请使用 api-test-dwp Skill 按真实报错修复，只修改本次相关代码，不要改动无关用例。
+这是刚才新增用例的 pytest 失败日志，请使用 api-test-E10 Skill 按真实报错修复，只修改本次相关代码，不要改动无关用例。
 ```
 
 ### 7.3 验证通过后检查改动
@@ -696,7 +721,7 @@ pytest E10自动化\接口自动化测试\test_case\【待补充：用例文件�
 6. 在 PyCharm 中安装 CC GUI 插件。
 7. 打开接口自动化项目。
 8. 在 CC GUI 中验证 AI 可正常回复。
-9. 确认 `api-test-dwp` Skill 可触发。
+9. 确认 `api-test-E10` Skill 可触发。
 10. 首次使用方式 1 时，按 `capture/README.md` 配置 mitmproxy、证书和浏览器代理。
 11. 按本教程“三、接口自动化用例编写”的第 4、5、6 节选择一种方式编写用例。
 12. 执行最小范围 pytest 验证。
@@ -704,9 +729,9 @@ pytest E10自动化\接口自动化测试\test_case\【待补充：用例文件�
 日常编写用例时按以下顺序执行：
 
 1. 打开 PyCharm 和 CC GUI。
-2. 明确本次用例要写到哪个文件、哪个位置。
-3. 准备 5 项任务信息。
-4. 选择方式 1、方式 2 或方式 3。
+2. 先确认本次是新增任务还是维护任务。
+3. 新增任务准备 5 项任务信息；维护任务准备 2 项维护任务信息。
+4. 新增任务选择方式 1、方式 2 或方式 3；维护任务选择方式 1、方式 2、方式 3 或方式 4。
 5. 按对应模板发送提示词。
 6. 根据 AI 提问补充业务细节。
 7. 查看生成代码。
@@ -724,15 +749,17 @@ pytest E10自动化\接口自动化测试\test_case\【待补充：用例文件�
 4. 确认 CC Switch 已切换到 DeepSeek 配置。
 5. 仍失败时记录错误：`【待补充：错误截图或日志】`。
 
-### 9.2 AI 没有按 `api-test-dwp` 规范执行
+### 9.2 AI 没有按 `api-test-E10` 规范执行
 处理：在提示词开头明确写：
 
 ```latex
-请使用 api-test-dwp Skill，并严格按 SKILL.md 的前置必填信息和三种编写方式执行。
+请使用 api-test-E10 Skill，并严格按 SKILL.md 的新增/维护前置门禁和对应方式执行。
 ```
 
 ### 9.3 提示缺少任务信息
-处理：检查是否完整填写了 5 项：
+处理：先确认任务类型，再检查对应信息。
+
+新增任务检查是否完整填写了 5 项：
 
 + `[接口方法文件]`
 + `[接口方法位置]`
@@ -740,7 +767,12 @@ pytest E10自动化\接口自动化测试\test_case\【待补充：用例文件�
 + `[接口用例位置]`
 + `[用例名]`
 
-如果不新增接口方法，前两项必须同时填写 `当前用例无新增接口`。
+如果新增任务不新增接口方法，前两项必须同时填写 `当前用例无新增接口`。
+
+维护任务检查是否完整填写了 2 项：
+
++ `[接口用例文件]`
++ `[接口用例位置]`
 
 ### 9.4 抓包服务启动失败
 处理：按 `capture/README.md` 排查，重点检查：
@@ -757,16 +789,17 @@ pytest E10自动化\接口自动化测试\test_case\【待补充：用例文件�
 + 有真实页面操作、新链路复杂：优先选方式 1。
 + 有非常相似的已有用例：优先选方式 2。
 + 只有接口请求和响应，没有抓包环境：选方式 3。
++ 维护已有用例且希望 AI 自行运行 pytest 看报错修复：选维护方式 4；默认优先 `/test-fixing`，只有维护困难或前后接口/调用栈信息不明确时才使用 `/Debugging`。
 
 ## 10. 附录：可直接复制的启动检查提示词
 ```markdown
-请使用 api-test-dwp Skill，帮我检查当前接口自动化环境是否可用。
+请使用 api-test-E10 Skill，帮我检查当前接口自动化环境是否可用。
 
 请检查：
 1. 当前项目结构是否符合接口自动化项目要求。
 2. 是否能找到 `E10自动化/接口自动化测试/config.py`。
 3. 当前 `RunConfig.baseurl` 是否可读取。
-4. `api-test-dwp` Skill 相关工具是否存在。
+4. `api-test-E10` Skill 相关工具是否存在。
 5. 如果我要使用方式1，请检查抓包服务是否运行。
 
 这次只是环境检查，不新增或修改用例。

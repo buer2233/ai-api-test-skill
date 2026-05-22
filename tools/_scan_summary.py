@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Author: dengwanpeng
 
 """对 page_api_index.sqlite3 做汇总统计（一次性脚本）。"""
@@ -12,7 +12,7 @@ _SKILL_ROOT = os.path.dirname(TOOLS_DIR)
 if _SKILL_ROOT not in sys.path:
     sys.path.insert(0, _SKILL_ROOT)
 
-from utils.api_index_db import get_default_db_path, load_metadata, load_methods  # noqa: E402
+from skill_utils.api_index_db import get_default_db_path, load_metadata, load_methods  # noqa: E402
 
 
 IDX = get_default_db_path(TOOLS_DIR)

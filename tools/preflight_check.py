@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Author: dengwanpeng
 
-"""api-test-dwp Skill 前置快速检查。
+"""api-test-E10 Skill 前置快速检查。
 
 设计原则：
 - 入口动作，必须够快；任何"重操作"放到下游脚本里。
@@ -37,7 +37,7 @@ _SKILL_ROOT = os.path.dirname(TOOLS_DIR)
 if _SKILL_ROOT not in sys.path:
     sys.path.insert(0, _SKILL_ROOT)
 
-from utils.project_root import DEFAULT_CONFIG_PATH  # noqa: E402
+from skill_utils.project_root import DEFAULT_CONFIG_PATH  # noqa: E402
 
 
 DATE_FIELD = "apiDataUpdateDate"
