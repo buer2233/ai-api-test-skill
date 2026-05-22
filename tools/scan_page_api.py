@@ -93,6 +93,13 @@ URL_EXTRACT_RULES = [
         ),
         "group": 2,
     },
+    {
+        "name": "url_assignment_format_path_bare_query",
+        "pattern": re.compile(
+            r"(?i)\burl\s*=\s*(?:[rubf]*)(['\"])[^'\"]*?(/(?:api|sapi|base|papi|ipconfigrec|tenantlogo|app)/[^'\"?\s]+)\?\1\s*\.format\("
+        ),
+        "group": 2,
+    },
 ]
 
 REQUEST_METHOD_RULES = [

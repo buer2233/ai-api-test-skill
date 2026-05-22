@@ -14,15 +14,18 @@
 
 文档刻意拆分，并非每次激活都全部加载：
 
-- `SKILL.md` —— **每次会话必加载**。保留两道前置门禁的**触发条件 + 必填字段 + 判定边界**、方式分流、核心原则纲领。AI 行为的入口权威来源；详细执行手册按需 Read `doc/preflight_gates.md` 与 `doc/core_principles.md`，方式细则按需 Read `doc/mode_*.md`。
+- `SKILL.md` —— **每次会话必加载**。保留前置门禁的**新增 / 维护分流读取要求**、方式分流、核心原则纲领。AI 行为的入口权威来源；详细执行手册按任务类型 Read `doc/preflight_gates_new.md` 或 `doc/preflight_gates_maintenance.md`，核心原则按需 Read `doc/core_principles.md`，方式细则按需 Read `doc/mode_*.md`。
 - `README.md` —— 面向用户的快速指南。与 `SKILL.md` 部分内容重叠。修改策略时**先改 `SKILL.md`**，再把用户可见的部分同步到 `README.md`。
 - `python tools/scan_page_api.py`：刷新 `tools/page_api_index.sqlite3` 接口索引。
-- `doc/preflight_gates.md` —— **按需加载**，前置门禁详细执行手册（打回模板、三选一菜单等）。SKILL.md 触发前置 A/B 时必须 Read。
+- `doc/preflight_gates_new.md` —— **新增任务按需加载**，新增用例/接口方法的前置门禁详细执行手册（5 项必填、三选一菜单等）。
+- `doc/preflight_gates_maintenance.md` —— **维护任务按需加载**，维护已有用例/接口方法的前置门禁详细执行手册（2 项必填、四选一菜单等）。
 - `doc/core_principles.md` —— **按需加载**，核心原则 1-5 的详细规则（查重流程、索引维护、pytest 闭环细节等）。SKILL.md 触发对应原则时按需 Read。
-- `doc/mode_capture_driven.md` / `doc/mode_reference_case.md` / `doc/mode_curl_manual.md` —— 三种接口自动化编写方案，选定方式后必须按需读取对应文件。
+- `doc/mode_capture_driven.md` / `doc/mode_reference_case.md` / `doc/mode_curl_manual.md` —— 新增任务的三种接口自动化编写方案，选定方式后必须按需读取对应文件。
+- `doc/maintenance_prompt_context.md` + `doc/mode_maintenance_*.md` —— 维护任务专用上下文与四种维护方案，其中方式4为 pytest 报错驱动维护。
 - `doc/coding_style_guide.md` —— **按需加载**，仅在编写接口方法 / 用例代码前 Read。
 - `doc/high_frequency_experience.md` —— 仅在踩到对应坑（Codex apply_patch、`show_list`、参数化与断言同步等）时加载。
 - `flow_chart/flow.md` 与同目录 PNG —— Mermaid 源码与导出图。`flow.md` 实质变化时才更新 PNG。
+- 第三方依赖 Skill：维护方式4默认优先使用 `/test-fixing`；只有 `/test-fixing` 无法解决、维护遇到困难或前后接口/调用栈信息不明确时，才使用 `/Debugging` 断点调试辅助定位。
 
 避免在多个文档间复制策略。这种拆分的目的就是让 `SKILL.md` 保持每次会话固定加载、其余按需拉取。
 
@@ -62,8 +65,8 @@
 
 由 `SKILL.md` 强制执行，不得绕过：
 
-1. **门禁 A —— 5 项任务信息**(见 `SKILL.md` "前置必填 A")。用户必须提供 `[接口方法文件]` / `[接口方法位置]` / `[接口用例文件]` / `[接口用例位置]` / `[用例名]`。两个"方法"字段可以**同时**填"当前用例无新增接口"，但不能只填一个。缺任意一项 → 原文返回打回模板并停止。
-2. **门禁 B —— 编写方式**(见 `SKILL.md` "前置必填 B")。三选一(①抓包驱动 / ②参考已有用例 / ③cURL 手工)。任务里有明确信号时自动推断；否则照抄三选一菜单。所选方式与任务信息记入 TodoWrite 首项。
+1. **新增任务前置门禁**：按 `doc/preflight_gates_new.md` 执行，必须提供 `[接口方法文件]` / `[接口方法位置]` / `[接口用例文件]` / `[接口用例位置]` / `[用例名]` 5 项，并选择新增三种方式之一。
+2. **维护任务前置门禁**：按 `doc/preflight_gates_maintenance.md` 执行，只强制提供 `[接口用例文件]` / `[接口用例位置]` 2 项，`[接口用例位置]` 必须能定位具体待维护的单个或多个用例，并选择维护四种方式之一。方式4按 pytest 报错驱动维护时，默认先用 `/test-fixing`，必要时再用 `/Debugging`。
 
 纯查询 / 诊断 / 工具状态查询类任务可豁免；只要触及接口方法或用例代码即必须走门禁。
 
@@ -99,15 +102,19 @@ python tools/match_captures.py --jsonl path/to/latest.jsonl
 
 项目内 pytest 闭环（与编写方式无关，需在项目仓库内执行）：
 
-- 工作目录：`<project>/E10自动化/接口自动化测试`
-- `PYTHONPATH` 需同时包含上述目录与其下 `test_case` 子目录
-- 跑单个用例：进入工作目录后执行 `pytest -k <用例名>`
+- **工作目录**：`<project>/E10自动化/接口自动化测试/test_case`（⚠️ 注意是 `test_case` 子目录，不是上层的 `接口自动化测试` 目录）
+- **PYTHONPATH**：设置为 `.`（当前目录，即 `test_case`）
+- **原因**：`conftest.py` 使用 `sys.path.append(os.getcwd())` 动态添加路径，`page_api` 模块位于 `test_case` 目录下
+- **标准命令格式**：
+  ```bash
+  cd "<project>/E10自动化/接口自动化测试/test_case" && PYTHONPATH="." pytest <用例文件路径>::<测试类>::<用例名> -v --tb=short
+  ```
 - 闭环契约见 `SKILL.md` "核心原则 → 测试必须闭环"——执行命令、关键日志、最终结果三项缺一不可，否则不能宣布完成。
 
 ## 本目录特有的编辑规则
 
 - **Python 源文件（`tools/*.py`、`capture/*.py`、`skill_utils/*.py`、`hooks/*.py`）必须 UTF-8 无 BOM**。本 skill 自身的 `SKILL.md` 核心原则 #2 同样适用于 skill 自己——Windows + 中文路径下 Codex / `apply_patch` 经常引入 BOM 或 `???` 乱码。任何编辑后必须重新 Read 文件，确认中文正常显示且无前导 `﻿` 字节。
-- 修改 `SKILL.md` 策略时，**同步检查 `README.md` 和 `doc/` 下对应方案文件** 是否需要跟进（三方式表格、5 项任务信息清单、目录结构块这几处刻意重复）。
+- 修改 `SKILL.md` 策略时，**同步检查 `README.md` 和 `doc/` 下对应方案文件** 是否需要跟进（新增三方式/维护四方式表格、按任务类型区分的任务信息清单、目录结构块这几处刻意重复）。
 - `tools/page_api_index.sqlite3` 已纳入版本管理。如果你在项目内手工新增接口方法，必须**在同一变更集里**更新该 SQLite 索引。这是 SKILL.md 核心原则 #3 的硬性要求。
 - 不要随意往 `capture/` 添加文件——它会被 `mitmdump -s capture_addon.py` 加载，任何 import 期错误都会让抓包流程失败。
 
@@ -118,11 +125,17 @@ python tools/match_captures.py --jsonl path/to/latest.jsonl
 ├── README.md                     # 用户快速指南
 ├── SKILL.md                      # AI 执行规范入口（前置门禁 + 方式分流）
 ├── doc/                          # 按需加载的拆分方案与辅助规范
-│   ├── preflight_gates.md         # 前置门禁详细执行手册
+│   ├── preflight_gates_new.md     # 新增任务前置门禁详细执行手册
+│   ├── preflight_gates_maintenance.md # 维护任务前置门禁详细执行手册
 │   ├── core_principles.md         # 核心原则 1-5 详细规则
 │   ├── mode_capture_driven.md     # 方式1：抓包驱动
 │   ├── mode_reference_case.md     # 方式2：参考已有用例
 │   ├── mode_curl_manual.md        # 方式3：cURL 手工
+│   ├── maintenance_prompt_context.md # 维护专用提示词上下文
+│   ├── mode_maintenance_capture_driven.md # 维护方式1：抓包驱动
+│   ├── mode_maintenance_reference_case.md # 维护方式2：参考已有用例
+│   ├── mode_maintenance_curl_manual.md # 维护方式3：cURL 手工
+│   ├── mode_maintenance_pytest_driven.md # 维护方式4：pytest 报错驱动
 │   ├── coding_style_guide.md      # 接口方法/用例编码风格规范
 │   └── high_frequency_experience.md # 高频踩坑经验
 ├── .gitignore                    # 忽略运行时产物
@@ -141,7 +154,7 @@ python tools/match_captures.py --jsonl path/to/latest.jsonl
 │   ├── restart.bat
 │   ├── capture_addon.py
 │   └── allowed_prefixes.txt
-├── tools/                        # 索引与匹配工具（三方式共用）
+├── tools/                        # 索引与匹配工具（各方式共用）
 │   ├── preflight_check.py        # skill 入口前置：接口数据时效检查
 │   ├── scan_page_api.py          # 扫描 page_api 生成索引
 │   ├── match_captures.py         # 抓包 vs 索引 → 勾选草稿
