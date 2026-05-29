@@ -12,7 +12,8 @@
 2. **接口查重**：优先查 `tools/page_api_index.sqlite3`，以 URL `pure_path` + HTTP method 判断是否已覆盖；路径含 `{1}` 等变量时按匹配规则命中复用，未命中按新增前置门禁指定位置新增（详见 SKILL.md 核心原则 #3）
 3. **真实返回**：抓包生成接口用例需要先看抓包 / cURL / pytest 的实际 response body；没有真实返回时不凭空补断言
 4. **编码校验**：写入后重新读取确认新增片段存在、无成片问号乱码、`python -m py_compile` 通过（详见 SKILL.md 核心原则 #2）
-
+5. **查找已实现接口方法**：查找已实现的接口方法时,优先查 .claude/skills/api-test-E10/tools/page_api_index.sqlite3(api_methods 表,按
+  ▎ api_url/api_name/api_desc 检索),而非全仓库 grep。
 ---
 
 ## 接口方法编写规范
