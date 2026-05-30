@@ -229,3 +229,6 @@ api-test-E10/
 | [`doc/high_frequency_experience.md`](./doc/high_frequency_experience.md) | 高频踩坑经验（按需查阅） |
 | [`flow_chart/flow.md`](./flow_chart/flow.md) | 完整流程图（Mermaid 源码，含决策树与方式对比） |
 | [`capture/README.md`](./capture/README.md) | 抓包配置细节（证书安装、代理设置、过滤规则） |
+
+# 友情链接
+L站：[Linux do](https://linux.do/)
