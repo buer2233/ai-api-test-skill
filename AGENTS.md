@@ -142,19 +142,6 @@ python tools/match_captures.py --jsonl path/to/latest.jsonl
 │   └── high_frequency_experience.md # 高频踩坑经验
 ├── flow_chart/                   # 流程图（Mermaid 源码 + 导出 PNG）
 │   ├── flow.md
-│   ├── 0.前置hook执行扫描新增接口数据.png
-│   ├── 1.主流程图.png
-│   ├── 2.前置操作的门禁要求.png
-│   ├── 3.新增任务总览.png
-│   ├── 4.推荐方式1-抓包驱动.png
-│   ├── 5.推荐方式2-参考已有用例.png
-│   ├── 6.补充方式3-手工复制cURL.png
-│   ├── 7.用例维护的主流程.png
-│   ├── 8.维护方式1-抓包驱动.png
-│   ├── 9.维护方式2-参考已有用例.png
-│   ├── 10.维护方式3-cURL 手工.png
-│   ├── 11.维护方式4-pytest 报错驱动.png
-│   └── 12.pytest执行闭环.png
 ├── capture/                      # 抓包底座（方式①）
 │   ├── README.md
 │   ├── start.bat
@@ -179,10 +166,5 @@ python tools/match_captures.py --jsonl path/to/latest.jsonl
 └── config.json                   # 运行时配置：baseurl / apiDataUpdateDate
 ```
 
-## 其它需要准备的规则
-1. 新增python文件时,文件最前面都需要加上如下内容:
-```python
-# -*- coding: utf-8 -*-
-# Author: dengwanpeng
-```
-2. 无论是AGENTS.md还是CLAUDE.md文件修改，都需要同步的修改另外一个文件，两个文件保持一致。
+## 减少常见 LLM 编码错误的行为准则
+可根据项目特定需求合并使用： @andrej-karpathy-skills.md
