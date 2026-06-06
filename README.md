@@ -3,6 +3,12 @@
 `test-automation` 仓库**内置的接口自动化编写 Skill**（项目级，物理位置 `.claude/skills/api-test-E10/`），提供“新增 / 维护”两类任务入口；新增任务提供三种编写方式，维护任务提供四种维护方式。
 AI 执行规范详见 [`SKILL.md`](./SKILL.md)，完整流程图详见 [`flow_chart/flow.md`](./flow_chart/flow.md)。
 
+# AI接口自动化测试框架推荐
+
+项目地址：https://github.com/buer2233/ai-api-test
+
+基于当前项目的SKILL，结合通用的接口自动化测试框架编写的，通用的AI接口自动化框架。目前为初版状态，还在持续优化迭代中，感兴趣的大佬可以点个星星关注下。
+
 # 实际的效率提升记录和使用记录
 
 ## 数据提升记录
@@ -129,67 +135,6 @@ AI 会先判断本次任务是：
 ### 新增任务方式③ 快速上手
 
 发送 `# 本次任务信息` + 每个接口的 cURL 命令 + 对应响应体
-
-## 目录结构
-
-```
-api-test-E10/
-├── README.md                     # 本文件（用户快速指南）
-├── SKILL.md                      # AI 执行规范入口（前置门禁声明 + 方式分流 + 核心原则纲领）
-├── AGENTS.md                     # Codex/Agent 协作规则
-├── CLAUDE.md                     # Claude Code 协作规则
-├── doc/                          # 按需加载的拆分方案与辅助规范
-│   ├── preflight_gates_new.md     # 新增任务前置门禁详细执行手册（5 项必填 + 三选一菜单）
-│   ├── preflight_gates_maintenance.md # 维护任务前置门禁详细执行手册（2 项必填 + 四选一菜单）
-│   ├── core_principles.md         # 核心原则 1-5 详细规则（查重、索引维护、pytest 闭环）
-│   ├── maintenance_prompt_context.md # 维护专用提示词上下文
-│   ├── mode_capture_driven.md     # 新增方式1：抓包驱动
-│   ├── mode_reference_case.md     # 新增方式2：参考已有用例
-│   ├── mode_curl_manual.md        # 新增方式3：cURL 手工
-│   ├── mode_maintenance_capture_driven.md # 维护方式1：抓包驱动
-│   ├── mode_maintenance_reference_case.md # 维护方式2：参考已有用例
-│   ├── mode_maintenance_curl_manual.md # 维护方式3：cURL 手工
-│   ├── mode_maintenance_pytest_driven.md # 维护方式4：pytest 报错驱动
-│   ├── coding_style_guide.md      # 接口方法/用例编码风格规范
-│   └── high_frequency_experience.md # 高频踩坑经验
-├── flow_chart/                   # 流程图（Mermaid 源码 + 导出 PNG）
-│   ├── flow.md                   # 完整流程图与决策树（Mermaid 源码）
-│   ├── 0.前置hook执行扫描新增接口数据.png
-│   ├── 1.主流程图.png
-│   ├── 2.前置操作的门禁要求.png
-│   ├── 3.新增任务总览.png
-│   ├── 4.推荐方式1-抓包驱动.png
-│   ├── 5.推荐方式2-参考已有用例.png
-│   ├── 6.补充方式3-手工复制cURL.png
-│   ├── 7.用例维护的主流程.png
-│   ├── 8.维护方式1-抓包驱动.png
-│   ├── 9.维护方式2-参考已有用例.png
-│   ├── 10.维护方式3-cURL 手工.png
-│   ├── 11.维护方式4-pytest 报错驱动.png
-│   └── 12.pytest执行闭环.png
-├── capture/                      # 抓包底座（方式①）
-│   ├── README.md                 # 抓包配置详细指引（证书安装等）
-│   ├── start.bat                 # 一键启动 12138
-│   ├── stop.bat                  # 停止 12138 进程
-│   ├── restart.bat               # 停止 12138 后等待 1 秒并重启
-│   ├── capture_addon.py          # mitmdump 插件（过滤 + 落盘 JSONL）
-│   └── allowed_prefixes.txt      # 用户可扩展的 URL 过滤前缀
-├── tools/                        # 索引与匹配工具（各方式共用）
-│   ├── _scan_summary.py          # 扫描结果摘要辅助模块
-│   ├── scan_page_api.py          # 扫描 page_api 生成索引
-│   ├── match_captures.py         # 抓包 vs 索引 → 勾选草稿
-│   ├── check_capture_server.py   # 检测 12138 抓包服务器状态
-│   ├── preflight_check.py        # 入口前置：接口数据时效检查
-│   └── page_api_index.sqlite3    # SQLite 接口覆盖文档（纳入版本管理）
-├── skill_utils/                        # 多模块共用的基础函数（复用规则见 CLAUDE.md / AGENTS.md）
-│   ├── project_root.py           # 项目根定位（由 skill 自身位置推导）
-│   ├── common_function.py        # 通用配置更新等共享方法
-│   ├── api_index_db.py           # SQLite 索引读写
-│   └── api_path_match.py         # 抓包路径匹配规则
-├── hooks/                        # Claude Code PreToolUse hook
-│   └── preflight_hook.py         # 触发 preflight_check 并注入 additionalContext
-└── config.json                   # 运行时配置（baseurl / apiDataUpdateDate）
-```
 
 > 运行时产物（`latest.jsonl`、`capture_selection.md`）落在**项目根**的 `api_test_dwp_temp/` 下，**不在** skill 自身目录。
 
