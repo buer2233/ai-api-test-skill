@@ -59,9 +59,9 @@ skill 被触发瞬间，项目级 `.claude/settings.json` 的 `PreToolUse` hook 
 
 ## 🚨 前置必填 B：新增方式选择
 
-新增任务信息校验通过后，如果用户**尚未在任务描述中明确指定编写方式**，AI **必须主动提问**让用户在以下三种方式中选择一个。
+新增任务信息校验通过后，如果用户**尚未在任务描述中明确指定编写方式**，AI **必须主动提问**让用户在以下四种方式中选择一个。
 
-### 新增任务三选一菜单（AI 照抄提问，不要修改格式和任何内容）
+### 新增任务四选一菜单（AI 照抄提问，不要修改格式和任何内容）
 
 > 请选择本次新增用例的编写方式（回复数字即可）：
 >
@@ -76,6 +76,10 @@ skill 被触发瞬间，项目级 `.claude/settings.json` 的 `PreToolUse` hook 
 > **③ 补充方式3：cURL 手工** —— 用户手动粘贴 cURL 请求 + 接口返回值，AI 据此编写
 >   - 适用：抓包数据量过大 / 抓包里无关接口过多 / 抓包工具不可用的场景
 >   - 需要：用户提供每个接口的 cURL 命令 + 对应响应体
+>
+> **④ 推荐方式4：Java Controller 源码参考** —— 读取 Controller 源码或 Jacoco 报告，提取全部接口并对照索引查重，生成可编辑分析草稿后再补齐未覆盖接口方法与用例
+>   - 适用：后端 Controller 已定义接口，但接口自动化未覆盖；需要按源码全量找漏补缺
+>   - 需要：用户提供 Controller 源码/Jacoco 报告链接/本地源码文件，AI 生成 `api_test_dwp_temp/java_sourceCode_analysisResult.md` 后等待用户调整勾选与分组
 
 ### 方式选择的默认推断规则（免提问）
 
@@ -86,8 +90,9 @@ skill 被触发瞬间，项目级 `.claude/settings.json` 的 `PreToolUse` hook 
 | "抓包已就绪" / "用抓包" / "我刚操作完" / "读 latest.jsonl" | 方式1 |
 | "参照 xxx_api.py 的 test_xxx" / "仿照已有" / "批量写同类" / "复制用例改参数" | 方式2 |
 | 消息里已粘贴 `curl ...` 命令 / "这是我的接口和返回" + JSON | 方式3 |
+| "Java Controller" / "controller 源码" / "Jacoco" / `.java.html` / `@RequestMapping` / `@GetMapping` / `@PostMapping` | 方式4 |
 
-若信号模糊或冲突，仍按"新增任务三选一菜单"询问用户。
+若信号模糊或冲突，仍按"新增任务四选一菜单"询问用户。
 
 ### 方式选定后的记录要求
 
