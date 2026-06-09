@@ -2,7 +2,7 @@
 
 本文件使用 [Mermaid](https://mermaid.js.org/) 绘制。VSCode / GitHub / Obsidian / Typora 等均可直接渲染。
 
-> 新增任务前置门禁见 `doc/preflight_gates_new.md`，维护任务前置门禁见 `doc/preflight_gates_maintenance.md`。新增任务的三种方式已拆分到 `doc/mode_capture_driven.md`、`doc/mode_reference_case.md`、`doc/mode_curl_manual.md`；维护任务的四种方式已拆分到 `doc/mode_maintenance_*.md`，维护共用提示词见 `doc/maintenance_prompt_context.md`。本文件仅维护流程图与决策关系。
+> 新增任务前置门禁见 `doc/preflight_gates_new.md`，维护任务前置门禁见 `doc/preflight_gates_maintenance.md`。新增任务的四种方式已拆分到 `doc/mode_capture_driven.md`、`doc/mode_reference_case.md`、`doc/mode_curl_manual.md`、`doc/mode_java_controller_source.md`；维护任务的四种方式已拆分到 `doc/mode_maintenance_*.md`，维护共用提示词见 `doc/maintenance_prompt_context.md`。本文件仅维护流程图与决策关系。
 
 ---
 
@@ -43,7 +43,7 @@ flowchart TD
     NoNewApi --> NewMode{新增方式已确定?<br/>含自动推断}
     HasNewApi --> NewMode
     NewMode -- 是 --> NewTodo[TodoWrite 首项:<br/>新增 + 方式N + 5 项任务信息]
-    NewMode -- 否 --> NewAsk[按 preflight_gates_new.md<br/>询问新增三选一]
+    NewMode -- 否 --> NewAsk[按 preflight_gates_new.md<br/>询问新增四选一]
     NewAsk --> NewTodo
 
     ReadMaint --> MaintInfo{维护 2 项<br/>任务信息齐全?}
@@ -59,6 +59,7 @@ flowchart TD
     Dispatch -- 新增-方式① --> Flow1A[新增方式1: 抓包驱动]
     Dispatch -- 新增-方式② --> Flow2A[新增方式2: 参考已有用例]
     Dispatch -- 新增-方式③ --> Flow3A[新增方式3: cURL 手工]
+    Dispatch -- 新增-方式④ --> Flow4A[新增方式4: Java Controller 源码参考]
     Dispatch -- 维护-方式① --> Flow1B[维护方式1: 抓包驱动]
     Dispatch -- 维护-方式② --> Flow2B[维护方式2: 参考已有用例]
     Dispatch -- 维护-方式③ --> Flow3B[维护方式3: cURL 手工]
@@ -67,6 +68,7 @@ flowchart TD
     Flow1A --> Pytest[pytest 闭环]
     Flow2A --> Pytest
     Flow3A --> Pytest
+    Flow4A --> Pytest
     Flow1B --> Pytest
     Flow2B --> Pytest
     Flow3B --> Pytest
@@ -113,7 +115,7 @@ flowchart LR
     MInfo -- 是 --> MMode{维护方式已定?}
 
     NMode -- 任务有信号 --> AutoN[自动推断新增方式]
-    NMode -- 无信号 --> AskN[新增三选一菜单]
+    NMode -- 无信号 --> AskN[新增四选一菜单]
     NMode -- 用户已回复数字 --> TakeN[采纳新增方式]
 
     MMode -- 任务有信号 --> AutoM[自动推断维护方式]
@@ -160,9 +162,9 @@ flowchart TD
 
     NoNew --> Mode{新增方式已确定?}
     HasNew --> Mode
-    Mode -- 任务有明确信号 --> AutoMode[自动推断<br/>方式1 / 方式2 / 方式3]
+    Mode -- 任务有明确信号 --> AutoMode[自动推断<br/>方式1 / 方式2 / 方式3 / 方式4]
     Mode -- 用户已回复数字 --> TakeMode[采纳用户选择]
-    Mode -- 否 --> AskMode[照抄新增三选一菜单<br/>等用户选择]
+    Mode -- 否 --> AskMode[照抄新增四选一菜单<br/>等用户选择]
     AskMode --> TakeMode
 
     AutoMode --> ReadDocs[读取 coding_style_guide.md<br/>+ 对应 mode_*.md]
@@ -171,17 +173,19 @@ flowchart TD
     Dispatch --> N1[新增方式1：抓包驱动]
     Dispatch --> N2[新增方式2：参考已有用例]
     Dispatch --> N3[新增方式3：cURL 手工]
+    Dispatch --> N4[新增方式4：Java Controller 源码参考]
 
     N1 --> VerifyN[pytest 闭环]
     N2 --> VerifyN
     N3 --> VerifyN
+    N4 --> VerifyN
     VerifyN --> NEnd([完成新增])
 
     classDef nWait fill:#fc8,stroke:#c80,color:#000
     classDef nPass fill:#8f8,stroke:#080,color:#000
     classDef nReject fill:#f88,stroke:#c00,color:#000
     class ReadGate,AskInfo,AskMode,ReadDocs nWait
-    class NoNew,HasNew,N1,N2,N3,NEnd nPass
+    class NoNew,HasNew,N1,N2,N3,N4,NEnd nPass
     class RejectPair nReject
 ```
 
@@ -191,7 +195,7 @@ flowchart TD
 - `[fixture]` 为选填，不参与缺项判定；其余字段必须是真实文件、真实位置和完整中文用例名。
 - `[接口方法文件]` 与 `[接口方法位置]` 可同时声明“当前用例无新增接口”；只声明一项时必须打回。
 - 声明“无新增接口”后，后续只能复用仓库现有接口方法，不得新增接口方法。
-- 方式未明确时必须照抄新增三选一菜单；有明确抓包、参考样本或 cURL 信号时可自动推断。
+- 方式未明确时必须照抄新增四选一菜单；有明确抓包、参考样本、cURL 或 Java Controller/Jacoco 信号时可自动推断。
 - 进入具体方式前，必须读取 `doc/coding_style_guide.md` 与对应 `doc/mode_*.md`。
 
 ---
@@ -340,7 +344,59 @@ flowchart TD
 
 ---
 
-## 七、维护任务总览（入口到方式分流）
+## 七、新增方式④：Java Controller 源码参考
+
+```mermaid
+flowchart TD
+    F4Start([方式4 入口]) --> Source{已提供 Controller 源码<br/>或 Jacoco 链接?}
+    Source -- 否 --> AskSource[追问源码文件 / Markdown / Jacoco URL]
+    AskSource --> SourceRecv[收到源码信息]
+    Source -- 是 --> Analyze
+    SourceRecv --> Analyze
+
+    Analyze[执行 analyze_java_controller.py<br/>提取 mapping 并按 api_url+method 查重]
+    Analyze --> Draft[生成 java_sourceCode_analysisResult.md<br/>未覆盖接口默认 x<br/>场景分组可编辑]
+    Draft --> StopDraft[AI 停下<br/>等待用户调整勾选与分组]
+    StopDraft --> Confirm[用户确认按草稿继续]
+
+    Confirm --> ReadDraft[重新读取用户调整后的草稿<br/>只处理保留勾选的接口和场景]
+    ReadDraft --> Design[按接口调用链路和业务场景设计用例<br/>写清推断依据]
+    Design --> Ref[查找现有相似用例<br/>或读取用户指定参考用例]
+    Ref --> Landing{用例文件是否为 _CSC.py?}
+    Landing -- 是 --> UseCSC[直接写入专用文件]
+    Landing -- 否 --> RemindCSC[仅提醒一次建议使用 _CSC.py<br/>用户坚持则按指定文件]
+    RemindCSC --> UseUserFile[按用户指定文件继续]
+
+    UseCSC --> Compose[新增/复用接口方法<br/>编写基础断言 + 打印完整返回]
+    UseUserFile --> Compose
+    Compose --> Run1[第一次 pytest<br/>获取真实返回]
+    Run1 --> Assert[依据真实返回补充断言]
+    Assert --> Retry{调试次数 < 3?}
+    Retry -- 是 --> Verify[pytest 闭环]
+    Verify --> Result{通过?}
+    Result -- 是 --> F4End([返回总览])
+    Result -- 否 --> Retry
+    Retry -- 否 --> Stop3[停止继续尝试<br/>总结请求信息 / payload / 前置变量 / 权限 / 环境等原因]
+    Stop3 --> F4End
+```
+
+### 方式④ 关键动作与产物
+
+| 步骤 | 动作 | 产物/输出 |
+|---|---|---|
+| 1 | 读取 Controller/Jacoco | Java 源码、行号、Jacoco `fc`/`nc`/`bnc`（如有） |
+| 2 | 提取接口并查重 | 类级 + 方法级 mapping 拼完整 URL，以 `api_url + method` 查 `page_api_index.sqlite3` |
+| 3 | 生成可编辑草稿 | `api_test_dwp_temp/java_sourceCode_analysisResult.md` |
+| 4 | 用户调整草稿 | 勾选接口、调整场景分组、补充参考用例备注 |
+| 5 | 设计用例 | 按调用链路拆分，不机械把所有 `[x]` 接口写成一条用例 |
+| 6 | 参考已有用例 | AI 自行检索或按用户指定参考用例复用 fixture、payload、断言风格 |
+| 7 | 编写 `_CSC.py` 用例 | 非 `_CSC.py` 只提醒一次，用户可强行指定其它文件 |
+| 8 | 两阶段断言 | 先基础断言并打印返回，再按真实返回补充断言 |
+| 9 | pytest 闭环 | 最多调试 3 次，不通过则总结原因并停止 |
+
+---
+
+## 八、维护任务总览（入口到方式分流）
 
 ```mermaid
 flowchart TD
@@ -388,7 +444,7 @@ flowchart TD
 
 ---
 
-## 八、维护方式①：抓包驱动
+## 九、维护方式①：抓包驱动
 
 ```mermaid
 flowchart TD
@@ -428,7 +484,7 @@ flowchart TD
 
 ---
 
-## 九、维护方式②：参考已有用例
+## 十、维护方式②：参考已有用例
 
 ```mermaid
 flowchart TD
@@ -465,7 +521,7 @@ flowchart TD
 
 ---
 
-## 十、维护方式③：cURL 手工
+## 十一、维护方式③：cURL 手工
 
 ```mermaid
 flowchart TD
@@ -504,7 +560,7 @@ flowchart TD
 
 ---
 
-## 十一、维护方式④：pytest 报错驱动
+## 十二、维护方式④：pytest 报错驱动
 
 ```mermaid
 flowchart TD
@@ -553,7 +609,7 @@ flowchart TD
 
 ---
 
-## 十二、pytest 闭环（新增三方式 / 维护四方式共用）
+## 十三、pytest 闭环（新增四方式 / 维护四方式共用）
 
 ```mermaid
 flowchart TD
@@ -592,16 +648,16 @@ flowchart TD
 
 ---
 
-## 十三、方式对比速查
+## 十四、方式对比速查
 
-| 维度 | 方式1 抓包 | 方式2 参考 | 方式3 cURL |
-|---|---|---|---|
-| 典型场景 | 新接口多 / 复杂链路 | 同类用例批量 / 修改参数 | 抓包不可用 / 数据过多 |
-| 用户准备成本 | 低（UI 操作即可） | 中（指定参考） | 高（收集 cURL + 响应） |
-| 新接口能力 | ✅ 索引驱动查重 | ⚠️ 默认不新增，必要时新增 | ✅ 按 cURL 新增 |
-| AI 主观判断 | 低（索引 + 草稿） | 中（仿写需理解参考） | 中（需理解 cURL 语义） |
-| 最常见失败 | 登录态 / 浏览器代理 | 参考样本选错 | cURL 不全 / 响应缺失 |
-| 闭环严格度 | 强（草稿必停等） | 强（参考必 Read） | 强（cURL+响应必配对） |
+| 维度 | 方式1 抓包 | 方式2 参考 | 方式3 cURL | 方式4 Java Controller |
+|---|---|---|---|---|
+| 典型场景 | 新接口多 / 复杂链路 | 同类用例批量 / 修改参数 | 抓包不可用 / 数据过多 | 后端已有接口定义但自动化未覆盖 |
+| 用户准备成本 | 低（UI 操作即可） | 中（指定参考） | 高（收集 cURL + 响应） | 中（提供 Controller/Jacoco） |
+| 新接口能力 | ✅ 索引驱动查重 | ⚠️ 默认不新增，必要时新增 | ✅ 按 cURL 新增 | ✅ 按源码提取后查重新增 |
+| AI 主观判断 | 低（索引 + 草稿） | 中（仿写需理解参考） | 中（需理解 cURL 语义） | 中高（需设计调用链路和场景分组） |
+| 最常见失败 | 登录态 / 浏览器代理 | 参考样本选错 | cURL 不全 / 响应缺失 | payload/前置变量从源码无法完整确定 |
+| 闭环严格度 | 强（草稿必停等） | 强（参考必 Read） | 强（cURL+响应必配对） | 强（源码分析草稿必停等，调试最多 3 次） |
 
 ### 维护方式速查
 
@@ -616,7 +672,7 @@ flowchart TD
 
 ---
 
-## 十四、本流程图与 SKILL.md 的对应关系
+## 十五、本流程图与 SKILL.md 的对应关系
 
 | 流程图章节 | SKILL.md 对应章节 |
 |---|---|
@@ -626,18 +682,19 @@ flowchart TD
 | 四、新增方式① | `doc/mode_capture_driven.md` |
 | 五、新增方式② | `doc/mode_reference_case.md` |
 | 六、新增方式③ | `doc/mode_curl_manual.md` |
-| 七、维护任务总览 | `doc/maintenance_prompt_context.md` + 维护 mode 文件 |
-| 八、维护方式① | `doc/mode_maintenance_capture_driven.md` |
-| 九、维护方式② | `doc/mode_maintenance_reference_case.md` |
-| 十、维护方式③ | `doc/mode_maintenance_curl_manual.md` |
-| 十一、维护方式④ | `doc/mode_maintenance_pytest_driven.md` |
-| 十二、pytest 闭环 | 核心原则 → 5. 测试必须闭环 |
-| 十三、对比速查 | 新增三方式 / 维护四方式共用规范 |
+| 七、新增方式④ | `doc/mode_java_controller_source.md` |
+| 八、维护任务总览 | `doc/maintenance_prompt_context.md` + 维护 mode 文件 |
+| 九、维护方式① | `doc/mode_maintenance_capture_driven.md` |
+| 十、维护方式② | `doc/mode_maintenance_reference_case.md` |
+| 十一、维护方式③ | `doc/mode_maintenance_curl_manual.md` |
+| 十二、维护方式④ | `doc/mode_maintenance_pytest_driven.md` |
+| 十三、pytest 闭环 | 核心原则 → 5. 测试必须闭环 |
+| 十四、对比速查 | 新增四方式 / 维护四方式共用规范 |
 | 附录 A、Hook 触发时序 | 🚨 前置必跑 0（由 hook 自动执行）+ 项目级 `.claude/settings.json` 的 `hooks.PreToolUse` |
 
 ---
 
-## 十五、维护说明
+## 十六、维护说明
 
 - 本文件与 `SKILL.md` 保持**双向一致**：修改任一侧流程，另一侧必须同步
 - Mermaid 语法兼容性优先 GitHub 与 VSCode 的 Mermaid 插件

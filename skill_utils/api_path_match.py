@@ -24,12 +24,16 @@ def _exact_match(covered_path: str, captured_path: str) -> bool:
 
 
 def _brace_placeholder_match(covered_path: str, captured_path: str) -> bool:
-    """支持 `/api/inc/{1}data/...` 这类路径变量匹配。"""
+    """支持一个或多个 `{任意值}` 路径占位符匹配。
+
+    每个占位符匹配同一路径段内的非 `/` 内容，兼容
+    `/api/{module}/{submodule}/stage` 与 `/api/inc/{1}data/` 等写法。
+    """
     normalized = _normalize(covered_path)
     if not re.search(r"\{[^/{}]+\}", normalized):
         return False
     pattern = re.escape(normalized)
-    pattern = re.sub(r"\\\{[^/{}]+\\\}", ".*?", pattern)
+    pattern = re.sub(r"\\\{[^/{}]+\\\}", "[^/]+", pattern)
     return re.fullmatch(pattern, _normalize(captured_path)) is not None
 
 

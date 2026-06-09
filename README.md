@@ -1,6 +1,6 @@
 # api-test-E10
 
-`test-automation` 仓库**内置的接口自动化编写 Skill**（项目级，物理位置 `.claude/skills/api-test-E10/`），提供“新增 / 维护”两类任务入口；新增任务提供三种编写方式，维护任务提供四种维护方式。
+`test-automation` 仓库**内置的接口自动化编写 Skill**（项目级，物理位置 `.claude/skills/api-test-E10/`），提供“新增 / 维护”两类任务入口；新增任务提供四种编写方式，维护任务提供四种维护方式。
 AI 执行规范详见 [`SKILL.md`](./SKILL.md)，完整流程图详见 [`flow_chart/flow.md`](./flow_chart/flow.md)。
 
 # AI接口自动化测试框架推荐
@@ -97,9 +97,9 @@ AI 会先判断本次任务是：
 - **新增**：新增接口方法 / 新增用例 / 补齐新链路
 - **维护**：修复已有接口方法 / 更新已有用例 / 回溯最新链路 / 定点修补
 
-确认任务类型后，再进入对应方式：新增任务三选一，维护任务四选一。
+确认任务类型后，再进入对应方式：新增任务四选一，维护任务四选一。
 
-## 新增任务的三种编写方式
+## 新增任务的四种编写方式
 
 任务信息齐全后，AI 会让您选择以下方式（或根据任务信号自动推断）：
 
@@ -108,6 +108,8 @@ AI 会先判断本次任务是：
 | **① 抓包驱动** | UI 操作 → 抓包 JSONL → 勾选接口 → 分析抓包 → 设计用例 → 相似度检查 → 编写用例 → pytest | 新接口多 / 复杂链路 |
 | **② 参考已有用例** | 指定参考用例 → AI 仿写 → pytest | 同类批量 / 修参数断言 |
 | **③ cURL 手工** | 粘贴 cURL + 响应 → AI 解析生成 → pytest | 抓包不可用 / 数据过大 |
+| **④ Java Controller 源码参考** | Controller/Jacoco → 提取接口 → 对照索引查重 → 生成可编辑分析草稿 → 用户调整勾选与分组 → 补齐方法/用例 → pytest | 后端已有接口定义但接口自动化未覆盖 |
+
 
 > 详细决策树与每种方式的完整步骤见 [`flow_chart/flow.md`](./flow_chart/flow.md)。
 
@@ -138,6 +140,10 @@ AI 会先判断本次任务是：
 
 > 运行时产物（`latest.jsonl`、`capture_selection.md`）落在**项目根**的 `api_test_dwp_temp/` 下，**不在** skill 自身目录。
 
+### 新增任务方式④ 快速上手
+
+发送 `# 本次任务信息` + Controller 源码/Jacoco 报告链接/本地源码文件。AI 会先执行 `tools/analyze_java_controller.py`，生成项目根 `api_test_dwp_temp/java_sourceCode_analysisResult.md`。您调整 `[x]` / `[ ]`、接口分组或参考用例备注后，再让 AI 继续补齐接口方法与 `_CSC.py` 用例。
+
 ## 常见问题
 
 **Q：12138 端口被占？** 运行 `capture/stop.bat`；仍失败则 `netstat -ano | findstr :12138` 查占用 PID。
@@ -166,6 +172,7 @@ AI 会先判断本次任务是：
 | [`doc/mode_capture_driven.md`](./doc/mode_capture_driven.md) | 新增方式1：抓包驱动详细流程 |
 | [`doc/mode_reference_case.md`](./doc/mode_reference_case.md) | 新增方式2：参考已有用例详细流程 |
 | [`doc/mode_curl_manual.md`](./doc/mode_curl_manual.md) | 新增方式3：cURL 手工详细流程 |
+| [`doc/mode_java_controller_source.md`](./doc/mode_java_controller_source.md) | 新增方式4：Java Controller 源码参考详细流程 |
 | [`doc/mode_maintenance_capture_driven.md`](./doc/mode_maintenance_capture_driven.md) | 维护方式1：抓包驱动详细流程 |
 | [`doc/mode_maintenance_reference_case.md`](./doc/mode_maintenance_reference_case.md) | 维护方式2：参考已有用例详细流程 |
 | [`doc/mode_maintenance_curl_manual.md`](./doc/mode_maintenance_curl_manual.md) | 维护方式3：cURL 手工详细流程 |

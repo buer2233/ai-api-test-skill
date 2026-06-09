@@ -1,4 +1,4 @@
-# Repository Guidelines
+# AGENTS.md
 
 ## 沟通语言
 
@@ -17,21 +17,21 @@
 - `SKILL.md` —— **每次会话必加载**。保留前置门禁的**新增 / 维护分流读取要求**、方式分流、核心原则纲领。AI 行为的入口权威来源；详细执行手册按任务类型 Read `doc/preflight_gates_new.md` 或 `doc/preflight_gates_maintenance.md`，核心原则按需 Read `doc/core_principles.md`，方式细则按需 Read `doc/mode_*.md`。
 - `README.md` —— 面向用户的快速指南。与 `SKILL.md` 部分内容重叠。修改策略时**先改 `SKILL.md`**，再把用户可见的部分同步到 `README.md`。
 - `python tools/scan_page_api.py`：刷新 `tools/page_api_index.sqlite3` 接口索引。
-- `doc/preflight_gates_new.md` —— **新增任务按需加载**，新增用例/接口方法的前置门禁详细执行手册（5 项必填、三选一菜单等）。
+- `doc/preflight_gates_new.md` —— **新增任务按需加载**，新增用例/接口方法的前置门禁详细执行手册（5 项必填、四选一菜单等）。
 - `doc/preflight_gates_maintenance.md` —— **维护任务按需加载**，维护已有用例/接口方法的前置门禁详细执行手册（2 项必填、四选一菜单等）。
 - `doc/core_principles.md` —— **按需加载**，核心原则 1-5 的详细规则（查重流程、索引维护、pytest 闭环细节等）。SKILL.md 触发对应原则时按需 Read。
-- `doc/mode_capture_driven.md` / `doc/mode_reference_case.md` / `doc/mode_curl_manual.md` —— 新增任务的三种接口自动化编写方案，选定方式后必须按需读取对应文件。
+- `doc/mode_capture_driven.md` / `doc/mode_reference_case.md` / `doc/mode_curl_manual.md` / `doc/mode_java_controller_source.md` —— 新增任务的四种接口自动化编写方案，选定方式后必须按需读取对应文件。
 - `doc/maintenance_prompt_context.md` + `doc/mode_maintenance_*.md` —— 维护任务专用上下文与四种维护方案，其中方式4为 pytest 报错驱动维护。
 - `doc/coding_style_guide.md` —— **按需加载**，仅在编写接口方法 / 用例代码前 Read。
 - `doc/high_frequency_experience.md` —— 仅在踩到对应坑（Codex apply_patch、`show_list`、参数化与断言同步等）时加载。
-- `flow_chart/flow.md` 与同目录 PNG —— Mermaid 源码与导出图。当前导出图覆盖前置 hook、主流程、前置门禁、新增总览、新增三方式、维护总览、维护四方式、pytest 闭环。`flow.md` 实质变化时才更新 PNG。
+- `flow_chart/flow.md` 与同目录 PNG —— Mermaid 源码与导出图。当前导出图覆盖前置 hook、主流程、前置门禁、新增总览、新增四方式、维护总览、维护四方式、pytest 闭环。`flow.md` 实质变化时才更新 PNG。
 - 第三方依赖 Skill：维护方式4默认优先使用 `/test-fixing`；只有 `/test-fixing` 无法解决、维护遇到困难或前后接口/调用栈信息不明确时，才使用 `/Debugging` 断点调试辅助定位。
 
 避免在多个文档间复制策略。这种拆分的目的就是让 `SKILL.md` 保持每次会话固定加载、其余按需拉取。
 
 ## 项目根定位架构（最不显眼的要点）
 
-本 skill 物理位置固定为 `<project>/.claude/skills/api-test-E10/`。**项目根直接由 skill 自身位置推导**：`SKILL_ROOT/../../..`。统一封装在 `skill_utils/project_root.py`，被 `capture/capture_addon.py`、`tools/match_captures.py`、`tools/scan_page_api.py`、`tools/preflight_check.py` 复用。
+本 skill 物理位置固定为 `<project>/.claude/skills/api-test-E10/`。**项目根直接由 skill 自身位置推导**：`SKILL_ROOT/../../..`。统一封装在 `skill_utils/project_root.py`，被 `capture/capture_addon.py`、`tools/match_captures.py`、`tools/analyze_java_controller.py`、`tools/scan_page_api.py`、`tools/preflight_check.py` 复用。
 
 校验：推导出的项目根下必须存在 `E10自动化` 子目录，否则报错并拒绝继续工作（防御 skill 被复制到错误位置）。
 
@@ -39,7 +39,7 @@
 
 剩余两条仍然成立：
 
-- 运行时产物（抓包产生的 `latest.jsonl`、match 产生的 `capture_selection.md`）写入**项目根**的 `api_test_dwp_temp/`，**绝不**写入 skill 自身目录。
+- 运行时产物（抓包产生的 `latest.jsonl`、match 产生的 `capture_selection.md`、Java 源码分析产生的 `java_sourceCode_analysisResult.md`）写入**项目根**的 `api_test_dwp_temp/`，**绝不**写入 skill 自身目录。
 - 与之相反，`tools/page_api_index.sqlite3` 与本 skill 全部源码一起**纳入版本管理**。
 
 排查"工具找不到文件"问题时，先确认 skill 仍处在 `<project>/.claude/skills/api-test-E10/` 路径下，其上 3 层即项目根，并且项目根下确实有 `E10自动化` 子目录。
@@ -65,7 +65,7 @@
 
 由 `SKILL.md` 强制执行，不得绕过：
 
-1. **新增任务前置门禁**：按 `doc/preflight_gates_new.md` 执行，必须提供 `[接口方法文件]` / `[接口方法位置]` / `[接口用例文件]` / `[接口用例位置]` / `[用例名]` 5 项，并选择新增三种方式之一。
+1. **新增任务前置门禁**：按 `doc/preflight_gates_new.md` 执行，必须提供 `[接口方法文件]` / `[接口方法位置]` / `[接口用例文件]` / `[接口用例位置]` / `[用例名]` 5 项，并选择新增四种方式之一。
 2. **维护任务前置门禁**：按 `doc/preflight_gates_maintenance.md` 执行，只强制提供 `[接口用例文件]` / `[接口用例位置]` 2 项，`[接口用例位置]` 必须能定位具体待维护的单个或多个用例，并选择维护四种方式之一。方式4按 pytest 报错驱动维护时，默认先用 `/test-fixing`，必要时再用 `/Debugging`。
 
 纯查询 / 诊断 / 工具状态查询类任务可豁免；只要触及接口方法或用例代码即必须走门禁。
@@ -91,6 +91,10 @@ python tools/scan_page_api.py --full  # 强制全量重建（清空 + 重写，i
 # 用抓包 JSONL 与索引比对，生成勾选草稿
 python tools/match_captures.py
 python tools/match_captures.py --jsonl path/to/latest.jsonl
+
+# 用 Java Controller 源码 / Jacoco 报告与索引比对，生成可编辑源码分析草稿
+python tools/analyze_java_controller.py --source path/to/Controller.java
+python tools/analyze_java_controller.py --source http://host/Controller.java.html#L76
 ```
 
 `scan_page_api.py` 已覆盖三类 HTTP method 写法：`requests.<verb>(...)` / `requests.request("VERB", ...)` / `self.send_msg("get"|"post", ...)`。method 在入库前统一 `upper()`。
@@ -114,7 +118,7 @@ python tools/match_captures.py --jsonl path/to/latest.jsonl
 ## 本目录特有的编辑规则
 
 - **Python 源文件（`tools/*.py`、`capture/*.py`、`skill_utils/*.py`、`hooks/*.py`）必须 UTF-8 无 BOM**。本 skill 自身的 `SKILL.md` 核心原则 #2 同样适用于 skill 自己——Windows + 中文路径下 Codex / `apply_patch` 经常引入 BOM 或 `???` 乱码。任何编辑后必须重新 Read 文件，确认中文正常显示且无前导 `﻿` 字节。
-- 修改 `SKILL.md` 策略时，**同步检查 `README.md` 和 `doc/` 下对应方案文件** 是否需要跟进（新增三方式/维护四方式表格、按任务类型区分的任务信息清单、目录结构块这几处刻意重复）。
+- 修改 `SKILL.md` 策略时，**同步检查 `README.md` 和 `doc/` 下对应方案文件** 是否需要跟进（新增四方式/维护四方式表格、按任务类型区分的任务信息清单、目录结构块这几处刻意重复）。
 - `tools/page_api_index.sqlite3` 已纳入版本管理。如果你在项目内手工新增接口方法，必须**在同一变更集里**更新该 SQLite 索引。这是 SKILL.md 核心原则 #3 的硬性要求。
 - 不要随意往 `capture/` 添加文件——它会被 `mitmdump -s capture_addon.py` 加载，任何 import 期错误都会让抓包流程失败。
 
@@ -133,6 +137,7 @@ python tools/match_captures.py --jsonl path/to/latest.jsonl
 │   ├── mode_capture_driven.md     # 方式1：抓包驱动
 │   ├── mode_reference_case.md     # 方式2：参考已有用例
 │   ├── mode_curl_manual.md        # 方式3：cURL 手工
+│   ├── mode_java_controller_source.md # 方式4：Java Controller 源码参考
 │   ├── maintenance_prompt_context.md # 维护专用提示词上下文
 │   ├── mode_maintenance_capture_driven.md # 维护方式1：抓包驱动
 │   ├── mode_maintenance_reference_case.md # 维护方式2：参考已有用例
@@ -141,7 +146,7 @@ python tools/match_captures.py --jsonl path/to/latest.jsonl
 │   ├── coding_style_guide.md      # 接口方法/用例编码风格规范
 │   └── high_frequency_experience.md # 高频踩坑经验
 ├── flow_chart/                   # 流程图（Mermaid 源码 + 导出 PNG）
-│   ├── flow.md
+│   └── flow.md
 ├── capture/                      # 抓包底座（方式①）
 │   ├── README.md
 │   ├── start.bat
@@ -154,6 +159,7 @@ python tools/match_captures.py --jsonl path/to/latest.jsonl
 │   ├── preflight_check.py        # skill 入口前置：接口数据时效检查
 │   ├── scan_page_api.py          # 扫描 page_api 生成索引
 │   ├── match_captures.py         # 抓包 vs 索引 → 勾选草稿
+│   ├── analyze_java_controller.py # Java Controller/Jacoco vs 索引 → 源码分析草稿
 │   ├── check_capture_server.py   # 检测 12138 抓包服务器状态
 │   └── page_api_index.sqlite3    # SQLite 接口覆盖文档（纳入版本管理）
 ├── skill_utils/                        # 多模块共用的基础函数

@@ -83,7 +83,8 @@ return res.json() if res.text else res.text
 
 ## 接口用例编写规范
 
-优先对照目标文件**插入点上下文**或**末尾最后 5 个用例**，保持风格一致。
+- 优先对照目标文件**插入点上下文**或**末尾最后 5 个用例**，保持风格一致。
+- 新增的接口自动化用例不能写成单接口用例；必须依据已有参考接口用例、抓包数据、cURL、Java Controller 源码等材料进行深入分析，梳理前置准备、核心操作、后置校验等完整调用链路，生成符合真实业务测试流程的完整接口自动化测试用例。
 
 ### 用例结构
 
@@ -95,7 +96,7 @@ return res.json() if res.text else res.text
   - `# 1. ...`
   - `# 2. ...`
 - 用例内统一：
-  - `# Author: dengwanpeng`
+  - `# Author: Author`
   - `# Create Date: YYYY-MM-DD`
   - `# IsAI: True`
 
