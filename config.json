@@ -1,5 +1,38 @@
 {
-  "baseurl": "weapp.mulinquan.cn",
-  "apiDataUpdateDate": "2026-05-21",
-  "multi_capture": 1
+  "framework": "pytest_requests",
+  "project_root": "D:/AI/AiApiTest-DWP",
+  "baseurl": "https://www.gbif.org",
+  "apiDataUpdateDate": "2026-06-10",
+  "multi_capture": 1,
+  "paths": {
+    "api_method_dirs": [
+      "test_case/page_api"
+    ],
+    "test_case_dirs": [
+      "test_case"
+    ],
+    "pytest_workdir": ".",
+    "runtime_temp_dir": "runtime"
+  },
+  "pytest": {
+    "pythonpath": ".",
+    "command_template": "pytest {target} -v --tb=short"
+  },
+  "api_index": {
+    "db_path": "tools/page_api_index.sqlite3",
+    "extract_rules_path": "tools/api_extract_rules.json",
+    "scan_dirs": [
+      "test_case/page_api"
+    ],
+    "include_globs": [
+      "**/*.py"
+    ],
+    "exclude_globs": [
+      "**/__*.py"
+    ],
+    "extract_rules": "builtin_requests_plus_generated"
+  },
+  "coding_style": {
+    "guide_path": "doc/coding_style_guide.md"
+  }
 }

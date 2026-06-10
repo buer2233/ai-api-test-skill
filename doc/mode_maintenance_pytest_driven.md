@@ -22,19 +22,18 @@
 
 1. **锁定目标用例**：只根据 `[接口用例文件]` 和 `[接口用例位置]` 定位待维护用例，不要求用户补 `[接口方法文件]` / `[接口方法位置]` / `[用例名]`。
 2. **读取目标上下文**：读取目标用例全文、所属测试类头部、fixture、相关 `self.xxx` 实例化和导入。
-3. **组装最小 pytest 命令**：优先用目标函数名或用户给出的 pytest `-k` 关键字执行最小范围 pytest；工作目录、`PYTHONPATH` 按 `doc/core_principles.md` 的 pytest 闭环要求处理。
+3. **组装最小 pytest 命令**：优先用目标函数名或用户给出的 pytest `-k` 关键字执行最小范围 pytest；工作目录、`PYTHONPATH` 与命令模板按 `config.json` 的 pytest 配置处理。
 
-   **⚠️ PYTHONPATH 设置要求（关键）**：
-   - **工作目录**：必须切换到 `<project>/E10自动化/接口自动化测试/test_case`（注意是 `test_case` 子目录，不是上层的 `接口自动化测试` 目录）
-   - **PYTHONPATH**：设置为 `.`（当前目录，即 `test_case`）
-   - **原因**：`conftest.py` 使用 `sys.path.append(os.getcwd())` 动态添加路径，`page_api` 模块位于 `test_case` 目录下
-   - **标准命令格式**：
-     ```bash
-     cd "<project>/E10自动化/接口自动化测试/test_case" && PYTHONPATH="." pytest <用例文件路径>::<测试类>::<用例名> -v --tb=short
+   **⚠️ pytest 配置要求（关键）**：
+   - **工作目录**：读取 `paths.pytest_workdir`
+   - **PYTHONPATH**：读取 `pytest.pythonpath`
+   - **命令模板**：读取 `pytest.command_template`，默认 `pytest {target} -v --tb=short`
+   - **标准命令格式**（由配置和当前 shell 渲染；Windows/PowerShell 使用 `Set-Location` + `$env:PYTHONPATH`，Bash 使用 `cd` + `PYTHONPATH=...`）：
+     ```powershell
+     Set-Location -LiteralPath "<paths.pytest_workdir>"; $env:PYTHONPATH="<pytest.pythonpath>"; pytest <target> -v --tb=short
      ```
-   - **示例**：
      ```bash
-     cd "D:/workSpace_001_02/test-automation/E10自动化/接口自动化测试/test_case" && PYTHONPATH="." pytest test_eBuilder_case/test_ebuilder_page_case/test_ebuilder_page_base_api_PC/test_ebuilder_page_api_PC.py::TestEBuilderPageApiPC::test_ebuilder_BAAF_xxx -v --tb=short
+     cd "<paths.pytest_workdir>" && PYTHONPATH="<pytest.pythonpath>" pytest <target> -v --tb=short
      ```
 
 4. **按真实报错定位**：根据 traceback、断言差异、接口响应、导入错误、fixture 错误或返回层级错误判断维护点。
