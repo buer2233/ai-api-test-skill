@@ -44,7 +44,7 @@
 
 1. **扫描新增**：运行 `tools/scan_page_api.py`——库为空时全量重建（id 从 1 起）；库非空时全量扫描后按 `Create Date` 取最近 30 天，与现有 `(api_url, method)` 比对，仅追加新接口
 2. **强制重建**：`python tools/scan_page_api.py --full` 清空并重写整表，id 重新从 1 编号
-3. **规则扩展**：URL 抽取在 `scan_page_api.py` 的 `URL_EXTRACT_RULES` 追加；HTTP method 抽取在 `REQUEST_METHOD_RULES` 追加（已覆盖 `requests.xxx(...)`、`requests.request("METHOD", ...)`、`self.send_msg("get"/"post", ...)`）；URL 抓包匹配在 `skill_utils/api_path_match.py` 追加
+3. **规则扩展**：初始化扫描会生成或维护 `tools/api_extract_rules.json`；URL 抽取优先使用内置 `requests` 规则 + 该规则文件；HTTP method 抽取已覆盖 `requests.xxx(...)`、`requests.request("METHOD", ...)`、`self.send_msg("get"/"post", ...)`；遇到特殊写法时先生成预览，用户确认后再追加规则并增量入库
 
 ## 4. 以真实返回为准
 
@@ -55,10 +55,10 @@
 ## 5. 测试必须闭环
 
 - 完成代码后必须执行 `pytest`，**默认必须跑到新增用例通过才算完成**（除非用户在当前对话中明确强调不需要跑 pytest）
-- 执行前先确认工作目录与 `PYTHONPATH`：
-  - 工作目录：`\test-automation\E10自动化\接口自动化测试\test_case`
-  - `PYTHONPATH`：`.`（当前目录，即 `test_case`）
-  - 原因：`conftest.py` 使用 `sys.path.append(os.getcwd())` 动态添加路径，`page_api` 模块位于 `test_case` 目录下
+- 执行前先读取 `config.json` 中的 pytest 配置：
+  - 工作目录：`paths.pytest_workdir`
+  - `PYTHONPATH`：`pytest.pythonpath`
+  - 命令模板：`pytest.command_template`
 - 记录执行目录、`PYTHONPATH`、执行命令、关键日志、报错信息、最终结果
 - 如果失败，必须根据真实报错定位并修复，直到通过
 - 如果最终通过依赖特定工作目录或 `PYTHONPATH`，必须明确说明
