@@ -15,9 +15,12 @@
 公开 API 一览（详见各模块 docstring）：
 
 - 来自 `project_root`：
-    REPO_MARKER / TEMP_DIR_NAME / CONFIG_FILENAME
+    TEMP_DIR_NAME / CONFIG_FILENAME
     SKILL_ROOT / DEFAULT_CONFIG_PATH / PROJECT_ROOT
     resolve_project_root / get_temp_dir
+
+- 来自 `config_loader`：
+    ConfigError / SkillConfig / load_config
 
 - 来自 `common_function`：
     update_skill_config
@@ -43,6 +46,13 @@ from skill_utils.project_root import (  # noqa: F401
     PROJECT_ROOT,
     resolve_project_root,
     get_temp_dir,
+)
+
+# --- config_loader -------------------------------------------------------
+from skill_utils.config_loader import (  # noqa: F401
+    ConfigError,
+    SkillConfig,
+    load_config,
 )
 
 # --- common_function ------------------------------------------------------
@@ -84,6 +94,10 @@ __all__ = [
     "get_temp_dir",
     # common_function
     "update_skill_config",
+    # config_loader
+    "ConfigError",
+    "SkillConfig",
+    "load_config",
     # api_index_db
     "DB_FILENAME",
     "get_default_db_path",

@@ -46,8 +46,8 @@ mitmdump -s capture_addon.py --listen-port 12138
 Proxy server listening at *:12138
 ```
 
-**如果 `self.baseurl = <empty>`**：说明没找到 `E10自动化/接口自动化测试/config.py`，或其 `RunConfig.baseurl` 被注释。请手动打开 config.py 确认当前启用的 baseurl 没被井号注释。
-启动成功后，addon 会通过 `skill_utils/common_function.py` 的通用配置更新方法，把当前解析到的 `RunConfig.baseurl` 同步写入 skill 根目录 `config.json` 的 `baseurl` 字段，便于后续工具读取当前抓包环境。
+**如果 `self.baseurl = <empty>`**：说明 `config.json.baseurl` 未配置，或 `project_root` / 路径配置无效。请先完成 skill 根目录 `config.json` 初始化。
+启动成功后，addon 优先使用 `config.json.baseurl` 过滤目标域名。
 
 ## 3. 安装 CA 证书（关键一步）
 
@@ -98,7 +98,7 @@ mitmproxy 需要把根证书装到 Windows 受信任根，才能解密 HTTPS。
 2. mitmdump 运行中（步骤 2）
 3. 浏览器打开被测环境，完成一次任意业务操作
 4. 查看 `api_test_dwp_temp/latest.jsonl`：
-   - 在项目根目录（含 `E10自动化` 的目录）下执行：`type api_test_dwp_temp\latest.jsonl`
+   - 在 `config.json.paths.runtime_temp_dir` 对应目录下查看 `latest.jsonl`
    - 若看到多行 JSON 即成功
 
 每行 JSON 关键字段：
@@ -164,8 +164,8 @@ A：`stop.bat` 释放；如占用方不是 mitmdump，查 `netstat -ano | findst
 **Q：证书装了但仍告警？**
 A：99% 是装到了"当前用户"而非"本地计算机"。重做步骤 3.2。
 
-**Q：抓不到 `/oa/second` 下的请求？**
-A：打开 `E10自动化/接口自动化测试/config.py`，确认 `RunConfig.baseurl` 匹配你浏览器访问的域名；addon 只记录与 baseurl 匹配的请求。
+**Q：抓不到目标请求？**
+A：确认 `config.json.baseurl` 匹配你浏览器访问的域名；addon 只记录与 baseurl 匹配的请求。
 
 **Q：HTTPS 站点访问报错？**
 A：证书没装好，或代理没开，或 mitmdump 没启动。三者都要满足。

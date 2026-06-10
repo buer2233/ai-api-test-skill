@@ -1,47 +1,42 @@
-# api-test-E10
+# api-test-common
 
-`test-automation` 仓库**内置的接口自动化编写 Skill**（项目级，物理位置 `.claude/skills/api-test-E10/`），提供“新增 / 维护”两类任务入口；新增任务提供四种编写方式，维护任务提供四种维护方式。
+> 一个面向 **所有 `python + pytest + requests` 接口自动化测试框架** 的 AI Skill：把接口方法扫描、用例编写、抓包分析、pytest 失败维护和项目编码风格约束串成可落地的自动化工作流。
+
 AI 执行规范详见 [`SKILL.md`](./SKILL.md)，完整流程图详见 [`flow_chart/flow.md`](./flow_chart/flow.md)。
 
-# AI接口自动化测试框架推荐
+如果你的接口自动化项目满足这三个条件：**Python 编写、pytest 执行、requests 发请求**，这个 Skill 就可以通过 `config.json` 接入你的项目，而不是被某一个固定目录、固定包名或固定业务系统绑定。
 
-项目地址：https://github.com/buer2233/ai-api-test
+它的目标不是再造一个测试框架，而是让 AI 更稳定地在你现有的接口自动化框架里工作：读懂现有接口层、沿用已有编码风格、避免重复造接口方法、按真实 pytest 结果闭环维护。
 
-基于当前项目的SKILL，结合通用的接口自动化测试框架编写的，通用的AI接口自动化框架。目前为初版状态，还在持续优化迭代中，感兴趣的大佬可以点个星星关注下。
+## 为什么值得关注
 
-# 实际的效率提升记录和使用记录
+- **框架无侵入接入**：通过 `config.json` 指定项目根、接口方法目录、用例目录、pytest 工作目录和扫描目录；不要求你迁移项目结构。
+- **适配真实项目写法**：支持直接 `requests.*`、`requests.request(...)`、`self.get/post/...`、`self.request("METHOD", ...)`、`send_msg(...)` 等常见封装，并支持后续追加特殊提取规则。
+- **自动建立 API 索引**：扫描现有接口方法，生成 `tools/page_api_index.sqlite3`，用于查重、抓包匹配、源码分析和新增用例前的接口覆盖判断。
+- **先学习你的编码风格**：初始化扫描时基于你提供的接口方法模板和 pytest 用例模板生成 `coding_style_guide` 草稿，让 AI 按你的项目风格写代码。
+- **新增和维护都能跑通闭环**：新增任务支持抓包、参考已有用例、cURL、Java Controller 源码四种入口；维护任务支持抓包回溯、参考用例、cURL、pytest 报错驱动四种方式。
+- **pytest 结果优先**：维护时以真实 pytest 报错分类，区分“功能 BUG / 用例待维护 / 信息不足”，避免为了通过测试盲目改断言。
+- **面向 Windows 友好**：路径、中文目录、PowerShell pytest 命令、UTF-8 编码和抓包运行目录都做了显式约束。
+- **保留安全门禁**：新增/维护任务有明确前置清单，特殊接口提取规则采用“预览 → 用户确认 → 增量入库”，不偷偷改库。
 
-## 数据提升记录
+## 适配范围
 
-数据来源于我个人工作中负责的EB低代码模块使用AI后的5个月，和使用AI前的5个月。
+当前 Skill 专注一个清晰边界：`python + pytest + requests` 接口自动化测试框架。
 
-通过AI+SKILL编写接口用例的效率提升90%，综合效率提升46%。
+| 支持 | 暂不支持 |
+|---|---|
+| pytest 用例组织与执行 | unittest |
+| requests 及基于 requests 的轻量封装 | httpx / aiohttp |
+| 现有 page_api / api_client / service_api 等接口封装目录 | 非 Python 接口测试框架 |
+| 抓包、cURL、参考用例、Java Controller 源码辅助编写 | 通用 UI 自动化、性能测试、契约测试平台 |
 
-| 月份                  | 周次           | 接口方法数 | 接口用例数 | 接口+用例总数 | AI使用 |
-| --------------------- | -------------- | ---------- | ---------- | ------------- | ------ |
-| 未使用AI前的5周数据   | 3月第四周      | 51         | 34         | 85            | 否     |
-|                       | 3月第五周      | 5          | 29         | 34            | 否     |
-|                       | 4月第一周      | 45         | 18         | 63            | 否     |
-|                       | 4月第二周      | 26         | 38         | 64            | 否     |
-|                       | 4月第三周      | 2          | 79         | 81            | 否     |
-|                       | 合计           | 129        | 198        | 327           |        |
-|                       |                |            |            |               |        |
-| 使用AI提效后的5周数据 | 4月第四周      | 34         | 84         | 118           | 是     |
-|                       | 5月第一周      | 28         | 58         | 86            | 是     |
-|                       | 5月第二周      | 1          | 53         | 54            | 是     |
-|                       | 5月第三周      | 31         | 109        | 140           | 是     |
-|                       | 5月第四周      | 2          | 79         | 81            | 是     |
-|                       | 合计           | 96         | 383        | 479           |        |
-|                       |                |            |            |               |        |
-|                       | 使用AI的提升率 | 74.42%     | 193.43%    | 146.48%       |        |
+## 典型使用路径
 
-## 通过AI+SKILL编写自动化测试用例记录
-
-<https://www.yuque.com/bbuer/ebdyfe/gpxaqwd5gnwk3bqt?singleDoc#> 《通过AI+SKILL编写自动化测试用例记录》
-
-## 通过AI+SKILL维护用例的测试记录
-
-<https://www.yuque.com/bbuer/ebdyfe/bua08uq469osgla1?singleDoc#> 《通过AI+SKILL维护用例的测试记录》
+1. 在 [`config.json`](./config.json) 中配置你的测试框架路径。
+2. 选择接口方法模板和 pytest 用例模板，运行初始化扫描，生成编码风格草稿和 API 索引。
+3. 新增接口自动化用例时，按前置清单提供接口方法文件、用例文件和用例名，选择抓包 / 参考用例 / cURL / Controller 源码方式。
+4. 维护失败用例时，指定用例位置，AI 按最新 pytest 报错定位并分类处理。
+5. 每次改动都以目标 pytest 命令和关键日志收尾，避免只生成代码不验证。
 
 ## 环境要求与安装
 
@@ -53,9 +48,57 @@ AI 执行规范详见 [`SKILL.md`](./SKILL.md)，完整流程图详见 [`flow_ch
 | pytest 失败修复 | 维护方式④默认优先使用 | `/test-fixing` | `npx skills add sickn33/antigravity-awesome-skills@test-fixing -g -y`<br/>GitHub: `https://github.com/sickn33/antigravity-awesome-skills` |
 | Python 断点调试 | `/test-fixing` 无法解决、调用栈或前后接口信息不明确时兜底使用 | `/Debugging` | `npx skills add pluginagentmarketplace/custom-plugin-python@debugging -g -y`<br/>GitHub: `https://github.com/pluginagentmarketplace/custom-plugin-python` |
 
-`api-test-E10` 已随 `test-automation` 仓库一起分发，clone 仓库后无需额外安装。Claude Code 会自动从项目 `.claude/skills/` 目录加载本 skill。
+使用前必须先初始化本目录下的 [`config.json`](./config.json)，把 `project_root`、API 方法目录、pytest 工作目录、用例目录和索引扫描目录改成目标接口自动化项目的真实路径。
 
 第三方依赖 Skill 需要在当前 AI 工具环境中可用：`/test-fixing` 用于默认测试修复流程，`/Debugging` 用于维护困难时通过断点、执行堆栈、局部变量、请求 payload、接口响应和方法返回值辅助定位。
+
+## 使用前：初始化 config.json
+
+本 skill 不再从固定目录或项目 marker 推导项目根。所有路径都从 `config.json` 读取。
+
+最小必填项：
+
+```json
+{
+  "framework": "pytest_requests",
+  "project_root": "D:/your-api-test-project",
+  "paths": {
+    "api_method_dirs": ["tests/page_api"],
+    "test_case_dirs": ["tests/cases"],
+    "pytest_workdir": "tests",
+    "runtime_temp_dir": "runtime"
+  },
+  "pytest": {
+    "pythonpath": ".",
+    "command_template": "pytest {target} -v --tb=short"
+  },
+  "api_index": {
+    "db_path": "tools/page_api_index.sqlite3",
+    "extract_rules_path": "tools/api_extract_rules.json",
+    "scan_dirs": ["tests/page_api"],
+    "extract_rules": "builtin_requests_plus_generated"
+  }
+}
+```
+
+`tools/api_extract_rules.json` 是内部规则文件，由初始化扫描或 AI 维护；用户无需手写正则。
+
+历史项目路径只作为迁移参考，不再是默认硬规则。
+
+初始化扫描示例：
+
+```powershell
+python tools/init_project_scan.py `
+  --config config.json `
+  --api-template D:\your-api-test-project\tests\page_api\user_api.py `
+  --case-template D:\your-api-test-project\tests\cases\test_user_api.py
+```
+
+扫描完成后会生成：
+
+- 编码风格草稿：`<project_root>/<paths.runtime_temp_dir>/coding_style_guide_draft.md`
+- API 覆盖索引：`tools/page_api_index.sqlite3`
+- 内部提取规则文件：`tools/api_extract_rules.json`
 
 ## 使用前：填写任务信息
 
@@ -85,80 +128,6 @@ AI 执行规范详见 [`SKILL.md`](./SKILL.md)，完整流程图详见 [`flow_ch
 - `[接口用例文件]` = `填写接口用例所在文件路径`
 - `[接口用例位置]` = `填写具体的待维护的单个/多个用例，例如：test_xxx / 某测试类下的多个用例 / 第456行附近的 xxx 用例`
 ```
-
-- **例外**：纯查询/工具/诊断类对话不需要填
-
-> 因 skill 已固定安装在 `<project>/.claude/skills/api-test-E10/`，项目根由 skill 自身位置直接推导，**不再需要 AI 在对应前置门禁通过后回写 `config.project_path`**。抓包与勾选工具自动把运行时产物落到 `<project>/api_test_dwp_temp/`。
-
-## 任务类型入口
-
-AI 会先判断本次任务是：
-
-- **新增**：新增接口方法 / 新增用例 / 补齐新链路
-- **维护**：修复已有接口方法 / 更新已有用例 / 回溯最新链路 / 定点修补
-
-确认任务类型后，再进入对应方式：新增任务四选一，维护任务四选一。
-
-## 新增任务的四种编写方式
-
-任务信息齐全后，AI 会让您选择以下方式（或根据任务信号自动推断）：
-
-| 方式 | 流程概要 | 适合场景 |
-|---|---|---|
-| **① 抓包驱动** | UI 操作 → 抓包 JSONL → 勾选接口 → 分析抓包 → 设计用例 → 相似度检查 → 编写用例 → pytest | 新接口多 / 复杂链路 |
-| **② 参考已有用例** | 指定参考用例 → AI 仿写 → pytest | 同类批量 / 修参数断言 |
-| **③ cURL 手工** | 粘贴 cURL + 响应 → AI 解析生成 → pytest | 抓包不可用 / 数据过大 |
-| **④ Java Controller 源码参考** | Controller/Jacoco → 提取接口 → 对照索引查重 → 生成可编辑分析草稿 → 用户调整勾选与分组 → 补齐方法/用例 → pytest | 后端已有接口定义但接口自动化未覆盖 |
-
-
-> 详细决策树与每种方式的完整步骤见 [`flow_chart/flow.md`](./flow_chart/flow.md)。
-
-## 维护任务的四种维护方式
-
-维护任务信息齐全后，AI 会让您选择以下方式（或根据任务信号自动推断）：
-
-| 方式 | 流程概要 | 适合场景 |
-|---|---|---|
-| **① 抓包驱动** | 最新抓包 → 回溯链路 → 对照现有实现 → 维护用例 → pytest | 链路变化大 / 多接口联动 |
-| **② 参考已有用例** | 指定参考样本 → 对照差异 → 局部维护 → pytest | 同类用例结构稳定 / 参数断言调整 |
-| **③ cURL 手工** | 粘贴 cURL + 响应 → 对照旧实现 → 定点维护 → pytest | 少量接口变化明确 |
-| **④ pytest 报错驱动** | AI 直接执行目标用例 pytest → 按最后一个中断报错分类 → 用例待维护时优先 `/test-fixing` → 必要时 `/Debugging` 断点定位 → 循环验证 | 用户只想指定用例后让 AI 自行跑失败并维护 |
-
-### 新增任务方式① 快速上手
-
-1. 双击 `capture/start.bat` 启动抓包（或让 AI 启动）
-2. 浏览器代理 → `127.0.0.1:12138`，完成业务操作后回复"继续"
-3. AI 生成勾选草稿 → 您勾选需要的接口 → AI 分析抓包、设计用例、检查相似用例 → 编写方法/用例 → pytest 闭环
-
-### 新增任务方式② 快速上手
-
-发送 `# 本次任务信息` + 参考样本（函数名或文件路径）+ 差异点描述
-
-### 新增任务方式③ 快速上手
-
-发送 `# 本次任务信息` + 每个接口的 cURL 命令 + 对应响应体
-
-> 运行时产物（`latest.jsonl`、`capture_selection.md`）落在**项目根**的 `api_test_dwp_temp/` 下，**不在** skill 自身目录。
-
-### 新增任务方式④ 快速上手
-
-发送 `# 本次任务信息` + Controller 源码/Jacoco 报告链接/本地源码文件。AI 会先执行 `tools/analyze_java_controller.py`，生成项目根 `api_test_dwp_temp/java_sourceCode_analysisResult.md`。您调整 `[x]` / `[ ]`、接口分组或参考用例备注后，再让 AI 继续补齐接口方法与 `_CSC.py` 用例。
-
-## 常见问题
-
-**Q：12138 端口被占？** 运行 `capture/stop.bat`；仍失败则 `netstat -ano | findstr :12138` 查占用 PID。
-
-**Q：mitmproxy HTTPS 仍告警？** 99% 是证书装到"当前用户"而非"本地计算机"，参考 `capture/README.md` 重装。
-
-**Q：抓不到 `/oa/second` 下请求？** 检查 `config.py` 中 `RunConfig.baseurl` 是否与浏览器访问域名一致。
-
-**Q：抓包数据太多？** 在 `capture/allowed_prefixes.txt` 删减前缀，或在勾选草稿中只勾必要接口。
-
-**Q：抓包含敏感信息吗？** `Cookie`/`Authorization` 头仅保留前 20 字符 + 长度摘要，不落全量。建议定期清理项目根下 `api_test_dwp_temp/latest.jsonl`。
-
-**Q：不想用抓包？** 可用方式②（参考已有用例）或方式③（cURL 手工）。
-
-**Q：抓包数据落到 skill 目录而不是项目目录？** 本版本 skill 已固定安装在 `<project>/.claude/skills/api-test-E10/`，项目根由 skill 位置直接推导。如发现产物落到 skill 目录，请确认目录路径符合该结构、且项目根下存在 `E10自动化` 子目录。
 
 ## 进一步阅读
 

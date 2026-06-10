@@ -32,8 +32,21 @@ def _brace_placeholder_match(covered_path: str, captured_path: str) -> bool:
     normalized = _normalize(covered_path)
     if not re.search(r"\{[^/{}]+\}", normalized):
         return False
-    pattern = re.escape(normalized)
-    pattern = re.sub(r"\\\{[^/{}]+\\\}", "[^/]+", pattern)
+    parts = []
+    last = 0
+    for match in re.finditer(r"\{[^/{}]+\}", normalized):
+        parts.append(re.escape(normalized[last:match.start()]))
+        # 占位符单独作为路径段时，匹配一个非 "/" 段；
+        # 嵌在路径段内时，兼容历史 `{1}data` 写法：
+        # `/api/inc/{1}data/x` 可匹配 `/api/inc/foo/data/x` 或 `/api/inc/data/x`。
+        full_segment = (
+            (match.start() == 0 or normalized[match.start() - 1] == "/")
+            and (match.end() == len(normalized) or normalized[match.end()] == "/")
+        )
+        parts.append("[^/]+" if full_segment else "(?:[^/]+/)?")
+        last = match.end()
+    parts.append(re.escape(normalized[last:]))
+    pattern = "".join(parts)
     return re.fullmatch(pattern, _normalize(captured_path)) is not None
 
 

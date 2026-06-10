@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # Author: dengwanpeng
 
-"""扫描 E10自动化/接口自动化测试/test_case/page_api/ 下所有 *.py。
+"""扫描 config.json 中 api_index.scan_dirs 下所有 *.py。
 
-提取 page_api 中已覆盖接口，写入 tools/page_api_index.sqlite3。
+提取已覆盖接口，写入 tools/page_api_index.sqlite3。
 
 用法：
     python scan_page_api.py           # 自动模式：空库走全量替换；非空库走增量追加
@@ -13,13 +13,15 @@ SQLite 字段：
     api_url、api_name、api_desc、author、create_date、update_date、method
 
 扫描规则维护：
-    1. URL 抽取规则：在本文件的 URL_EXTRACT_RULES 中追加。
-    2. HTTP method 抽取规则：在 REQUEST_METHOD_RULES 中追加。
-    3. 跨脚本复用的基础能力请放到 skill_utils/ 下。
+    1. 内置 URL 抽取规则在 URL_EXTRACT_RULES。
+    2. 内置 HTTP method 抽取规则在 REQUEST_METHOD_RULES。
+    3. 项目特定规则由初始化扫描生成到 tools/api_extract_rules.json。
+    4. 跨脚本复用的基础能力请放到 skill_utils/ 下。
 """
 
 import argparse
 import ast
+import json
 import os
 import re
 import sys
@@ -50,6 +52,7 @@ from skill_utils.api_index_db import (  # noqa: E402
     replace_index,
 )
 from skill_utils.common_function import update_skill_config  # noqa: E402
+from skill_utils.config_loader import ConfigError, load_config  # noqa: E402
 from skill_utils.project_root import resolve_project_root  # noqa: E402
 
 
@@ -69,6 +72,24 @@ def _info(msg: str) -> None:
 
 def _resolve_repo_root() -> Optional[str]:
     return resolve_project_root(on_warn=_warn)
+
+
+def _resolve_scan_roots() -> Tuple[Optional[str], List[str]]:
+    try:
+        config = load_config()
+    except ConfigError as exc:
+        _warn(f"读取扫描配置失败: {exc}")
+        return None, []
+    return str(config.project_root), [str(path) for path in config.api_scan_dirs]
+
+
+def _resolve_extract_rules_path() -> Optional[str]:
+    try:
+        config = load_config()
+    except ConfigError as exc:
+        _warn(f"读取提取规则配置失败: {exc}")
+        return None
+    return str(config.extract_rules_path)
 
 
 URL_EXTRACT_RULES = [
@@ -107,6 +128,10 @@ REQUEST_METHOD_RULES = [
     re.compile(r"requests\.request\(\s*['\"]([A-Za-z]+)['\"]"),
     # requests.get(...) / requests.post(...) / 同名快捷方法
     re.compile(r"requests\.(get|post|put|delete|patch|head|options)\(", re.IGNORECASE),
+    # BaseAPI 封装常见写法：self.get(url, ...) / self.post(url, ...)
+    re.compile(r"\bself\.(get|post|put|delete|patch|head|options)\(", re.IGNORECASE),
+    # BaseAPI 通用写法：self.request("GET", url, ...)
+    re.compile(r"\bself\.request\(\s*['\"]([A-Za-z]+)['\"]", re.IGNORECASE),
     # self.send_msg("post", url, ...) / self.xxx.send_msg('get', url, ...)
     re.compile(r"\.send_msg\(\s*['\"]([A-Za-z]+)['\"]"),
 ]
@@ -115,9 +140,51 @@ META_COMMENT_RE = re.compile(r"^\s*#\s*(Author|Create Date|Update Date)\s*[:：]
 DATE_PREFIX_RE = re.compile(r"^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})")
 
 
-def _extract_urls_from_source(source: str) -> List[str]:
+def _compile_rule(rule: dict) -> Optional[dict]:
+    try:
+        compiled = re.compile(rule["pattern"], re.IGNORECASE if rule.get("ignore_case", True) else 0)
+    except Exception as exc:
+        _warn(f"提取规则编译失败 {rule.get('name') or '<unnamed>'}: {exc}")
+        return None
+    return {
+        "name": rule.get("name") or "generated_rule",
+        "pattern": compiled,
+        "group": int(rule.get("group") or 1),
+    }
+
+
+def _load_extract_rules(rules_path: Optional[str] = None):
+    url_rules = list(URL_EXTRACT_RULES)
+    method_rules = list(REQUEST_METHOD_RULES)
+    if not rules_path or not os.path.isfile(rules_path):
+        return url_rules, method_rules
+    try:
+        with open(rules_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception as exc:
+        _warn(f"读取接口提取规则失败: {exc}")
+        return url_rules, method_rules
+    if not isinstance(data, dict):
+        _warn("接口提取规则文件顶层必须是对象，已忽略")
+        return url_rules, method_rules
+    for rule in data.get("url_extract_rules") or []:
+        if not isinstance(rule, dict):
+            continue
+        compiled = _compile_rule(rule)
+        if compiled:
+            url_rules.append(compiled)
+    for rule in data.get("method_extract_rules") or []:
+        if not isinstance(rule, dict):
+            continue
+        compiled = _compile_rule(rule)
+        if compiled:
+            method_rules.append(compiled["pattern"])
+    return url_rules, method_rules
+
+
+def _extract_urls_from_source(source: str, url_rules=None) -> List[str]:
     urls: List[str] = []
-    for rule in URL_EXTRACT_RULES:
+    for rule in url_rules or URL_EXTRACT_RULES:
         for match in rule["pattern"].finditer(source):
             urls.append(_clean_url_path(match.group(rule["group"])))
     return [url for url in urls if url]
@@ -186,8 +253,8 @@ def _extract_comment_meta(body_text: str) -> Dict[str, str]:
     return meta
 
 
-def _extract_http_method(body_text: str) -> str:
-    for rule in REQUEST_METHOD_RULES:
+def _extract_http_method(body_text: str, method_rules=None) -> str:
+    for rule in method_rules or REQUEST_METHOD_RULES:
         match = rule.search(body_text)
         if match:
             return match.group(1).upper()
@@ -213,7 +280,7 @@ def _parse_create_date(value: str) -> Optional[date]:
     return None
 
 
-def _parse_file(path: str) -> List[dict]:
+def _parse_file(path: str, url_rules=None, method_rules=None) -> List[dict]:
     try:
         with open(path, "r", encoding="utf-8") as f:
             source = f.read()
@@ -239,12 +306,12 @@ def _parse_file(path: str) -> List[dict]:
             start = sub.lineno - 1
             end = getattr(sub, "end_lineno", sub.lineno) or sub.lineno
             body_text = "\n".join(src_lines[start:end])
-            urls = _unique_keep_order(_extract_urls_from_source(body_text))
+            urls = _unique_keep_order(_extract_urls_from_source(body_text, url_rules=url_rules))
             if not urls:
                 continue
             meta = _extract_comment_meta(body_text)
             api_desc = _extract_doc_desc(sub)
-            http_method = _extract_http_method(body_text)
+            http_method = _extract_http_method(body_text, method_rules=method_rules)
             for url in urls:
                 results.append({
                     "class": cls_name,
@@ -271,22 +338,24 @@ def _iter_api_files(root: str):
                 yield os.path.join(dirpath, filename)
 
 
-def _scan_all(repo_root: str, pages_api_root: str) -> Tuple[List[dict], int]:
-    """全量扫描 page_api 目录，返回 (records, scanned_files)。"""
+def _scan_all(repo_root: str, pages_api_root, url_rules=None, method_rules=None) -> Tuple[List[dict], int]:
+    """全量扫描配置的 API 目录，返回 (records, scanned_files)。"""
     records: List[dict] = []
     scanned_files = 0
-    for fp in _iter_api_files(pages_api_root):
-        rel = os.path.relpath(fp, repo_root).replace("\\", "/")
-        try:
-            mtime = int(os.path.getmtime(fp))
-        except OSError:
-            continue
-        scanned_files += 1
-        items = _parse_file(fp)
-        for item in items:
-            item["file"] = rel
-            item["mtime"] = mtime
-            records.append(item)
+    roots = pages_api_root if isinstance(pages_api_root, (list, tuple)) else [pages_api_root]
+    for root in roots:
+        for fp in _iter_api_files(root):
+            rel = os.path.relpath(fp, repo_root).replace("\\", "/")
+            try:
+                mtime = int(os.path.getmtime(fp))
+            except OSError:
+                continue
+            scanned_files += 1
+            items = _parse_file(fp, url_rules=url_rules, method_rules=method_rules)
+            for item in items:
+                item["file"] = rel
+                item["mtime"] = mtime
+                records.append(item)
     return records, scanned_files
 
 
@@ -325,7 +394,7 @@ def _filter_truly_new(
 
 def _build_metadata(
     repo_root: str,
-    pages_api_root: str,
+    pages_api_root,
     scanned_files: int,
     total_methods: int,
     unique_paths: int,
@@ -334,7 +403,10 @@ def _build_metadata(
     return {
         "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "repo_root": repo_root.replace("\\", "/"),
-        "pages_api_root": os.path.relpath(pages_api_root, repo_root).replace("\\", "/"),
+        "pages_api_root": ";".join(
+            os.path.relpath(path, repo_root).replace("\\", "/")
+            for path in (pages_api_root if isinstance(pages_api_root, (list, tuple)) else [pages_api_root])
+        ),
         "scanner_version": SCANNER_VERSION,
         "scanned_files": str(scanned_files),
         "total_methods": str(total_methods),
@@ -378,29 +450,32 @@ def main():
     parser.add_argument("--db", default=INDEX_DB_PATH, help="SQLite 索引路径（默认 tools/page_api_index.sqlite3）")
     args = parser.parse_args()
 
-    repo_root = _resolve_repo_root()
+    repo_root, pages_api_roots = _resolve_scan_roots()
     if not repo_root:
         print(
-            "ERROR: 未找到项目根（含 E10自动化 目录）。"
-            "请确认 skill 安装在 <project>/.claude/skills/api-test-E10/ 路径下。",
+            "ERROR: 未找到项目根。请先在 config.json 中配置 project_root 与 api_index.scan_dirs。",
             file=sys.stderr,
         )
         return 1
 
-    pages_api_root = os.path.join(
-        repo_root, "E10自动化", "接口自动化测试", "test_case", "page_api"
-    )
-    if not os.path.isdir(pages_api_root):
-        print(f"ERROR: 未找到 page_api 目录 {pages_api_root}", file=sys.stderr)
+    missing_scan_roots = [path for path in pages_api_roots if not os.path.isdir(path)]
+    if missing_scan_roots:
+        print(f"ERROR: 未找到 API 扫描目录 {missing_scan_roots}", file=sys.stderr)
         return 1
 
     force_full = args.full or is_empty(args.db)
-    all_records, scanned_files = _scan_all(repo_root, pages_api_root)
+    url_rules, method_rules = _load_extract_rules(_resolve_extract_rules_path())
+    all_records, scanned_files = _scan_all(
+        repo_root,
+        pages_api_roots,
+        url_rules=url_rules,
+        method_rules=method_rules,
+    )
 
     if force_full:
         unique_paths = len({item.get("api_url") for item in all_records if item.get("api_url")})
         metadata = _build_metadata(
-            repo_root, pages_api_root, scanned_files, len(all_records), unique_paths,
+            repo_root, pages_api_roots, scanned_files, len(all_records), unique_paths,
             mode="full",
         )
         replace_index(args.db, all_records, metadata)
@@ -420,7 +495,7 @@ def main():
 
     metadata = _build_metadata(
         repo_root,
-        pages_api_root,
+        pages_api_roots,
         scanned_files,
         total_methods=len(all_records),
         unique_paths=len({item.get("api_url") for item in all_records if item.get("api_url")}),

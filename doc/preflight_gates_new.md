@@ -104,14 +104,22 @@ AI 在 TodoWrite 首项必须显式记录任务类型、方式编号与 5 项必
 
 ---
 
-## 项目根定位说明（本版本无需 AI 写入 config）
+## 项目根定位说明（必须先初始化 config）
 
-本 skill 已固定安装在 `<project>/.claude/skills/api-test-E10/` 路径下，项目根由 `skill_utils/project_root.py` 直接从 skill 自身位置推导（`SKILL_ROOT/../../..`）。
+本 skill 面向通用 `python + pytest + requests` 接口自动化项目。正式新增前，用户必须先在 `config.json` 中配置：
 
-因此新增任务信息校验通过后，AI **不再需要**从 `[接口用例文件]` 路径提取并写入 `config.json` 的 `project_path` 字段。抓包与勾选工具会通过 `skill_utils.project_root.resolve_project_root()` 自动定位 `<project>/api_test_dwp_temp/` 落地目录。
+1. `project_root`
+2. `paths.api_method_dirs`
+3. `paths.test_case_dirs`
+4. `paths.pytest_workdir`
+5. `paths.runtime_temp_dir`
+6. `api_index.scan_dirs`
+7. `pytest.pythonpath` / `pytest.command_template`
 
-如果运行时确实出现"找不到项目根"的错误，按以下顺序排查：
+新增任务信息校验通过后，AI 不从 `[接口用例文件]` 反推项目根；所有工具统一通过 `skill_utils.project_root.resolve_project_root()` 读取 `config.json.project_root`。
 
-1. 当前 skill 是否还处在 `<project>/.claude/skills/api-test-E10/` 路径下。
-2. skill 上 3 层目录（即推导出的项目根）下是否存在 `E10自动化` 子目录。
-3. 如以上两点均符合而仍报错，检查文件系统软链 / 符号链接是否被解析错误。
+如果运行时出现"找不到项目根"或"扫描目录不存在"，按以下顺序排查：
+
+1. `config.json.project_root` 是否已填写并指向真实目录。
+2. `api_index.scan_dirs` 是否相对 `project_root` 可解析为真实目录。
+3. `paths.pytest_workdir` 是否相对 `project_root` 可解析为真实目录。

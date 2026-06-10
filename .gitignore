@@ -3,8 +3,8 @@ __pycache__/
 *.pyc
 *.pyo
 
-# Claude 本地配置
-.claude/
+# IDE 本地配置
+.idea/
 
 # 临时文件
 temp_*.py

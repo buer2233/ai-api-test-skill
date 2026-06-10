@@ -1,15 +1,15 @@
 ---
 name: api-test-E10
-description: 当前 test-automation 项目内置的接口自动化编写 skill，物理位置 `.claude/skills/api-test-E10/`。用于在 `\test-automation\E10自动化\接口自动化测试` 中新增、维护、补齐、迁移接口测试方法与 pytest 用例。触发场景包括：新增接口方法、新增接口测试用例、参考 Java Controller 源码或 Jacoco 报告补齐未覆盖接口、维护已有接口方法与用例、补齐参数化、修复接口断言、按指定位置插入代码、按 URL 查重复实现、处理 UTF-8 中文编码、执行 pytest 并根据真实报错循环修复直到通过。运行时产物统一放在项目根 `api_test_dwp_temp/` 目录下。
+description: 面向 `python + pytest + requests` 接口自动化测试框架的接口自动化编写 skill。用于在用户通过 `config.json` 初始化的项目中新增、维护、补齐、迁移接口测试方法与 pytest 用例。触发场景包括：新增接口方法、新增接口测试用例、参考 Java Controller 源码或 Jacoco 报告补齐未覆盖接口、维护已有接口方法与用例、补齐参数化、修复接口断言、按指定位置插入代码、按 URL 查重复实现、处理 UTF-8 中文编码、执行 pytest 并根据真实报错循环修复直到通过。运行时产物统一放在 `config.json` 的 `paths.runtime_temp_dir` 目录下。
 ---
 
 # api-test-E10
 
-随 `test-automation` 项目一起分发的接口自动化编写 skill，把已验证有效的编写习惯、问题处理方式和交付格式沉淀为稳定流程。当前 skill 把“新增”和“维护”拆成两条独立上下文路径，项目根直接由 skill 在 `<project>/.claude/skills/api-test-E10/` 的固定位置推导，运行时产物统一落在项目根的 `api_test_dwp_temp/` 目录下。
+面向 `python + pytest + requests` 接口自动化测试框架的接口自动化编写 skill，把已验证有效的编写习惯、问题处理方式和交付格式沉淀为稳定流程。当前 skill 把“新增”和“维护”拆成两条独立上下文路径，项目根、API 方法目录、pytest 工作目录与运行时产物目录都必须先在 `config.json` 中初始化。
 
 ## 适用范围
 
-当任务涉及在 `E10自动化/接口自动化测试/` 内**新增或维护**接口测试方法/pytest 用例时，优先使用本 skill。同样适用于按 URL 查重、处理中文编码/导入路径/登录态/返回结构差异、根据真实 pytest 报错循环修复等场景。
+当任务涉及在已初始化的 `python + pytest + requests` 接口自动化项目内**新增或维护**接口测试方法/pytest 用例时，优先使用本 skill。同样适用于按 URL 查重、处理中文编码/导入路径/登录态/返回结构差异、根据真实 pytest 报错循环修复等场景。
 
 ## 🚨 前置门禁（按新增 / 维护分流读取）
 
@@ -74,7 +74,9 @@ Mermaid 源文件与导出 PNG 见 `flow_chart/` 目录，当前覆盖前置 hoo
 - **抓包底座**：`capture/capture_addon.py`
 - **索引与匹配工具**：`tools/scan_page_api.py` / `tools/match_captures.py` / `tools/analyze_java_controller.py` / `tools/check_capture_server.py`（入口前置 `tools/preflight_check.py` 由 hook 自动执行，见前置 0）
 - **全局接口覆盖文档**：`tools/page_api_index.sqlite3` —— 全局 URL 索引，扫描或 AI 新增接口后需更新（纳入版本管理）
-- **运行时产物**（项目根 `api_test_dwp_temp/`）：`latest.jsonl`（抓包落盘） / `capture_selection.md`（勾选草稿） / `java_sourceCode_analysisResult.md`（Java Controller 源码分析草稿）
+- **配置入口**：`config.json` —— 用户必须先配置 `project_root`、`paths.*`、`pytest.*`、`api_index.*`
+- **内部接口提取规则**：`tools/api_extract_rules.json` —— 初始化扫描或 AI 维护，用户无需手写正则
+- **运行时产物**（`config.json` 的 `paths.runtime_temp_dir`）：`latest.jsonl`（抓包落盘） / `capture_selection.md`（勾选草稿） / `java_sourceCode_analysisResult.md`（Java Controller 源码分析草稿）
 
 如果用户指定了别的参考文件或明确要求"参考当前位置上下文"，则以用户要求为先。
 

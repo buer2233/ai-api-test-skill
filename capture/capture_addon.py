@@ -34,6 +34,7 @@ if _SKILL_ROOT not in sys.path:
 from mitmproxy import ctx, http  # noqa: E402
 
 from skill_utils.common_function import update_skill_config  # noqa: E402
+from skill_utils.config_loader import ConfigError, load_config  # noqa: E402
 from skill_utils.project_root import (  # noqa: E402
     DEFAULT_CONFIG_PATH,
     TEMP_DIR_NAME,
@@ -156,9 +157,17 @@ def _save_baseurl_to_skill_config(baseurl: str) -> None:
 
 
 def _load_baseurl() -> str:
+    try:
+        configured = (load_config().raw.get("baseurl") or "").strip()
+    except ConfigError as e:
+        ctx.log.warn(f"[api-test-E10] 读取 config.json baseurl 失败: {e}")
+        configured = ""
+    if configured:
+        return configured
+
     repo_root = _resolve_repo_root()
     if not repo_root:
-        _warn("未找到项目根（skill 未安装在 <project>/.claude/skills/api-test-E10/ 路径下，或项目根缺少 E10自动化 子目录）")
+        _warn("未找到项目根，请先在 config.json 中配置 project_root")
         return ""
     config_path = os.path.join(repo_root, "E10自动化", "接口自动化测试", "config.py")
     if not os.path.isfile(config_path):
