@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<rect width="1600" height="900" fill="#F7F8FA"/>
+<rect x="34" y="34" width="1532" height="832" rx="36" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="2"/>
+<text x="70" y="125" fill="#111827" font-family="Segoe UI, Arial, sans-serif" font-size="54" font-weight="800">AI-assisted API testing impact</text>
+<text x="70" y="173" fill="#64748B" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="500">5 weeks before AI vs 5 weeks with ai-api-test-skill</text>
+<text x="70" y="268" fill="#111827" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="800">Measured results</text>
+<rect x="70" y="305" width="470" height="118" rx="22" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="2"/><rect x="70" y="305" width="8" height="118" rx="4" fill="#D45D4C"/>
+<text x="105" y="347" fill="#111827" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="700">API methods</text>
+<text x="105" y="387" fill="#D45D4C" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="800">-25.58%</text>
+<text x="285" y="385" fill="#64748B" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="500">Less method churn</text>
+<rect x="70" y="447" width="470" height="118" rx="22" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="2"/><rect x="70" y="447" width="8" height="118" rx="4" fill="#1F8F6F"/>
+<text x="105" y="489" fill="#111827" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="700">API test cases</text>
+<text x="105" y="529" fill="#1F8F6F" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="800">+93.43%</text>
+<text x="285" y="527" fill="#64748B" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="500">Case output nearly doubled</text>
+<rect x="70" y="589" width="470" height="118" rx="22" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="2"/><rect x="70" y="589" width="8" height="118" rx="4" fill="#2F68B1"/>
+<text x="105" y="631" fill="#111827" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="700">Total artifacts</text>
+<text x="105" y="671" fill="#2F68B1" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="800">+46.48%</text>
+<text x="285" y="669" fill="#64748B" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="500">Overall throughput up</text>
+<text x="70" y="790" fill="#334155" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="600">More test coverage with a smaller, more focused API method surface.</text>
+<text x="70" y="832" fill="#64748B" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="400">Data source: EB low-code module, personal work records.</text>
+<text x="640" y="245" fill="#111827" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="750">API methods</text>
+<rect x="640" y="275" width="170" height="34" rx="17" fill="#CBD5E1"/>
+<rect x="640" y="327" width="126" height="34" rx="17" fill="#D45D4C"/>
+<text x="656" y="300" fill="#64748B" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600">Before AI</text>
+<text x="656" y="352" fill="#FFFFFF" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">With AI</text>
+<text x="828" y="302" fill="#64748B" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="700">129</text>
+<text x="784" y="354" fill="#D45D4C" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="800">96</text>
+<text x="1320" y="332" fill="#D45D4C" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="800">-25.58%</text>
+<text x="640" y="400" fill="#111827" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="750">API test cases</text>
+<rect x="640" y="430" width="261" height="34" rx="17" fill="#CBD5E1"/>
+<rect x="640" y="482" width="506" height="34" rx="17" fill="#1F8F6F"/>
+<text x="656" y="455" fill="#64748B" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600">Before AI</text>
+<text x="656" y="507" fill="#FFFFFF" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">With AI</text>
+<text x="919" y="457" fill="#64748B" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="700">198</text>
+<text x="1164" y="509" fill="#1F8F6F" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="800">383</text>
+<text x="1320" y="487" fill="#1F8F6F" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="800">+93.43%</text>
+<text x="640" y="555" fill="#111827" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="750">Total artifacts</text>
+<rect x="640" y="585" width="432" height="34" rx="17" fill="#CBD5E1"/>
+<rect x="640" y="637" width="633" height="34" rx="17" fill="#2F68B1"/>
+<text x="656" y="610" fill="#64748B" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600">Before AI</text>
+<text x="656" y="662" fill="#FFFFFF" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">With AI</text>
+<text x="1090" y="612" fill="#64748B" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="700">327</text>
+<text x="1291" y="664" fill="#2F68B1" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="800">479</text>
+<text x="1320" y="642" fill="#2F68B1" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="800">+46.48%</text>
+</svg>
