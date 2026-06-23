@@ -9,9 +9,14 @@ __pycache__/
 # 临时文件
 temp_*.py
 /api_test_dwp_temp/
+.idea/
 
 # 旧版运行时产物（残留）
 capture/latest.jsonl
 capture/latest.jsonl.*
 capture/*.log
 capture_selection.md
+/tools/generate_readme_charts.py
+/findings.md
+/progress.md
+/task_plan.md
