@@ -8,7 +8,6 @@ __pycache__/
 
 # 临时文件
 temp_*.py
-/tests/
 /api_test_dwp_temp/
 
 # 旧版运行时产物（残留）
