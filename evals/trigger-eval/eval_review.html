@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eval Set Review - api-test-E10</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Lora', Georgia, serif; background: #faf9f5; padding: 2rem; color: #141413; }
+    h1 { font-family: 'Poppins', sans-serif; margin-bottom: 0.5rem; font-size: 1.5rem; }
+    .description { color: #b0aea5; margin-bottom: 1.5rem; font-style: italic; max-width: 900px; }
+    .controls { margin-bottom: 1rem; display: flex; gap: 0.5rem; }
+    .btn { font-family: 'Poppins', sans-serif; padding: 0.5rem 1rem; border: none; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500; }
+    .btn-add { background: #6a9bcc; color: white; }
+    .btn-add:hover { background: #5889b8; }
+    .btn-export { background: #d97757; color: white; }
+    .btn-export:hover { background: #c4613f; }
+    table { width: 100%; max-width: 1100px; border-collapse: collapse; background: white; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    th { font-family: 'Poppins', sans-serif; background: #141413; color: #faf9f5; padding: 0.75rem 1rem; text-align: left; font-size: 0.875rem; }
+    td { padding: 0.75rem 1rem; border-bottom: 1px solid #e8e6dc; vertical-align: top; }
+    tr:nth-child(even) td { background: #faf9f5; }
+    tr:hover td { background: #f3f1ea; }
+    .section-header td { background: #e8e6dc; font-family: 'Poppins', sans-serif; font-weight: 500; font-size: 0.8rem; color: #141413; text-transform: uppercase; letter-spacing: 0.05em; }
+    .query-input { width: 100%; padding: 0.4rem; border: 1px solid #e8e6dc; border-radius: 4px; font-size: 0.875rem; font-family: 'Lora', Georgia, serif; resize: vertical; min-height: 60px; }
+    .query-input:focus { outline: none; border-color: #d97757; box-shadow: 0 0 0 2px rgba(217,119,87,0.15); }
+    .toggle { position: relative; display: inline-block; width: 44px; height: 24px; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle .slider { position: absolute; inset: 0; background: #b0aea5; border-radius: 24px; cursor: pointer; transition: 0.2s; }
+    .toggle .slider::before { content: ""; position: absolute; width: 18px; height: 18px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.2s; }
+    .toggle input:checked + .slider { background: #d97757; }
+    .toggle input:checked + .slider::before { transform: translateX(20px); }
+    .btn-delete { background: #c44; color: white; padding: 0.3rem 0.6rem; border: none; border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-family: 'Poppins', sans-serif; }
+    .btn-delete:hover { background: #a33; }
+    .summary { margin-top: 1rem; color: #b0aea5; font-size: 0.875rem; }
+  </style>
+</head>
+<body>
+  <h1>Eval Set Review: <span id="skill-name">api-test-E10</span></h1>
+  <p class="description">Current description: <span id="skill-desc">当前 test-automation 项目内置的接口自动化编写 skill，物理位置 `.claude/skills/api-test-E10/`。用于在 `\test-automation\E10自动化\接口自动化测试` 中新增、维护、补齐、迁移接口测试方法与 pytest 用例。触发场景包括：新增接口方法、新增接口测试用例、参考 Java Controller 源码或 Jacoco 报告补齐未覆盖接口、维护已有接口方法与用例、补齐参数化、修复接口断言、按指定位置插入代码、按 URL 查重复实现、处理 UTF-8 中文编码、执行 pytest 并根据真实报错循环修复直到通过。运行时产物统一放在项目根 `api_test_dwp_temp/` 目录下。</span></p>
+
+  <div class="controls">
+    <button class="btn btn-add" onclick="addRow()">+ Add Query</button>
+    <button class="btn btn-export" onclick="exportEvalSet()">Export Eval Set</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:65%">Query</th>
+        <th style="width:18%">Should Trigger</th>
+        <th style="width:10%">Actions</th>
+      </tr>
+    </thead>
+    <tbody id="eval-body"></tbody>
+  </table>
+
+  <p class="summary" id="summary"></p>
+
+  <script>
+    const EVAL_DATA = [
+  {
+    "query": "帮我在 E10自动化/接口自动化测试 里新增一个合同审批提交接口的 pytest 用例，接口方法写到 page_api/contract_api.py 末尾，用例写到 test_case/test_contract_api_PC.py 文件末尾，用例名：合同审批-提交审批。我这边抓包服务已经在 12138 起好了，你按抓包驱动来写。",
+    "should_trigger": true
+  },
+  {
+    "query": "参考 test_case/test_workflow_api_PC.py 里的 test_create_workflow 用例，仿写一个创建流程草稿的接口自动化用例。任务信息如下：接口方法文件=page_api/workflow_api.py 末尾，接口用例文件=test_case/test_workflow_api_PC.py 末尾，用例名=流程-创建草稿。差异点：接口换成 /api/workflow/draft/create，多一个 draftName 字段。",
+    "should_trigger": true
+  },
+  {
+    "query": "抓包用不了，我直接给你 cURL。请在接口自动化里补一个查询组织架构的接口方法和用例。\n# 本次任务信息\n- [接口方法文件]=page_api/org_api.py 文件末尾\n- [接口方法位置]=文件末尾\n- [接口用例文件]=test_case/test_org_api_PC.py\n- [接口用例位置]=文件末尾\n- [用例名]=组织-查询组织树\n\ncurl -X POST 'http://10.12.1.20/api/hrm/org/tree' -H 'Content-Type: application/json' -d '{\"parentId\":0}'\n响应：{\"code\":200,\"data\":[{\"id\":1,\"name\":\"总部\"}]}",
+    "should_trigger": true
+  },
+  {
+    "query": "后端给了这个 Java Controller 源码路径 D:/backend/src/main/java/com/weaver/form/FormController.java，请对照 page_api 索引查一下哪些接口还没写自动化，把未覆盖的补成接口方法和 pytest 用例。接口方法放到 page_api/form_api.py 末尾，用例放到 test_case/test_form_api_PC.py 末尾。",
+    "should_trigger": true
+  },
+  {
+    "query": "这个 Jacoco 报告页 http://10.12.101.50:8080/jacoco/com.weaver.attendance/AttendanceController.java.html 里有几个接口自动化还没覆盖，帮我按 Java Controller 源码参考方式补齐到 E10 接口自动化项目里。",
+    "should_trigger": true
+  },
+  {
+    "query": "维护一下 test_case/test_leave_api_PC.py 里的 test_submit_leave 用例，链路最近改了。我重新抓了一包，你按抓包驱动维护，把接口方法和断言同步到最新链路。\n# 本次维护任务信息\n- [接口用例文件]=test_case/test_leave_api_PC.py\n- [接口用例位置]=test_submit_leave",
+    "should_trigger": true
+  },
+  {
+    "query": "test_case/test_budget_api_PC.py 里 test_budget_list 的断言和参数化要按 test_budget_detail 那个风格改一下，参考已有用例做局部维护就行。\n# 本次维护任务信息\n- [接口用例文件]=test_case/test_budget_api_PC.py\n- [接口用例位置]=test_budget_list",
+    "should_trigger": true
+  },
+  {
+    "query": "帮忙定点修一下 test_case/test_meeting_api_PC.py::TestMeeting::test_book_meeting，接口 payload 变了。我贴 cURL 和响应，你对照旧实现维护。\n# 本次维护任务信息\n- [接口用例文件]=test_case/test_meeting_api_PC.py\n- [接口用例位置]=test_book_meeting\n\ncurl 'http://10.12.1.20/api/meeting/book' -H 'Content-Type: application/json' --data-raw '{\"roomId\":12,\"startTime\":\"2026-08-01 10:00\"}'",
+    "should_trigger": true
+  },
+  {
+    "query": "直接跑 test_case/test_attendance_api_PC.py::TestAttendance::test_clock_in，失败了你就按报错修，修到 pytest 通过为止。我懒得贴日志了，你自己执行闭环。\n# 本次维护任务信息\n- [接口用例文件]=test_case/test_attendance_api_PC.py\n- [接口用例位置]=test_clock_in",
+    "should_trigger": true
+  },
+  {
+    "query": "帮我查一下 /api/workflow/request/create 这个 URL 在 page_api 里有没有重复实现，有的话列出来别再写一遍了。",
+    "should_trigger": true
+  },
+  {
+    "query": "接口自动化用例 test_case/test_hrm_api_PC.py 里中文全变成问号乱码了，帮我按 UTF-8 无 BOM 修一下编码，顺便检查导入路径。",
+    "should_trigger": true
+  },
+  {
+    "query": "在 E10 接口自动化里给报销模块补参数化：test_case/test_expense_api_PC.py 的 test_expense_submit 要支持正常/金额超限/缺少附件三组数据，断言也要跟着同步。",
+    "should_trigger": true
+  },
+  {
+    "query": "把 UI 自动化里 testcases/test_login_case.py 的登录流程改稳定一点，Selenium 经常点不到登录按钮，加个显式等待。",
+    "should_trigger": false
+  },
+  {
+    "query": "帮我写个 Python 单元测试，测 utils/date_helper.py 里的 format_date 函数，用 pytest 就行，跟 E10 业务接口无关。",
+    "should_trigger": false
+  },
+  {
+    "query": "我们前端 Vue 项目里调用了 /api/user/info，帮我在 axios 封装里加个请求拦截器自动带 token。这是前端代码，不是接口自动化仓库。",
+    "should_trigger": false
+  },
+  {
+    "query": "Jenkins 上接口自动化 job 挂了，帮我看下 Jenkinsfile 里 pytest 命令和 HTML 报告路径配置对不对，先别改业务用例。",
+    "should_trigger": false
+  },
+  {
+    "query": "解释一下 mitmproxy 怎么装、怎么设系统代理，我只是想自己抓包看请求，暂时不写 E10 接口自动化用例。",
+    "should_trigger": false
+  },
+  {
+    "query": "把 E10自动化/UI自动化 下 pageObject 的 BasePage 抽一层公共点击方法，跟接口测试无关。",
+    "should_trigger": false
+  },
+  {
+    "query": "数据库里 workflow_request 表结构变了，帮我写个 SQL 迁移脚本并更新对应 MyBatis mapper，不用动自动化测试。",
+    "should_trigger": false
+  },
+  {
+    "query": "这个 Allure 报告样式能不能改成公司主题色？主要是 UI 自动化 reports 目录那套，不是接口 HTML 报告。",
+    "should_trigger": false
+  },
+  {
+    "query": "接口自动化目录里有个历史用例 test_old_ bid_api，文件名和类名都乱，帮我重命名整理一下目录结构，先不要新增接口逻辑。",
+    "should_trigger": true
+  },
+  {
+    "query": "跑一下 E10 接口自动化全量 pytest 看看现在有多少失败，先出个失败清单，暂时先别改代码。",
+    "should_trigger": true
+  }
+];
+
+    let evalItems = [...EVAL_DATA];
+
+    function render() {
+      const tbody = document.getElementById('eval-body');
+      tbody.innerHTML = '';
+
+      // Sort: should-trigger first, then should-not-trigger
+      const sorted = evalItems
+        .map((item, origIdx) => ({ ...item, origIdx }))
+        .sort((a, b) => (b.should_trigger ? 1 : 0) - (a.should_trigger ? 1 : 0));
+
+      let lastGroup = null;
+      sorted.forEach(item => {
+        const group = item.should_trigger ? 'trigger' : 'no-trigger';
+        if (group !== lastGroup) {
+          const headerRow = document.createElement('tr');
+          headerRow.className = 'section-header';
+          headerRow.innerHTML = `<td colspan="3">${item.should_trigger ? 'Should Trigger' : 'Should NOT Trigger'}</td>`;
+          tbody.appendChild(headerRow);
+          lastGroup = group;
+        }
+
+        const idx = item.origIdx;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><textarea class="query-input" onchange="updateQuery(${idx}, this.value)">${escapeHtml(item.query)}</textarea></td>
+          <td>
+            <label class="toggle">
+              <input type="checkbox" ${item.should_trigger ? 'checked' : ''} onchange="updateTrigger(${idx}, this.checked)">
+              <span class="slider"></span>
+            </label>
+            <span style="margin-left:8px;font-size:0.8rem;color:#b0aea5">${item.should_trigger ? 'Yes' : 'No'}</span>
+          </td>
+          <td><button class="btn-delete" onclick="deleteRow(${idx})">Delete</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+      updateSummary();
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function updateQuery(idx, value) { evalItems[idx].query = value; updateSummary(); }
+    function updateTrigger(idx, value) { evalItems[idx].should_trigger = value; render(); }
+    function deleteRow(idx) { evalItems.splice(idx, 1); render(); }
+
+    function addRow() {
+      evalItems.push({ query: '', should_trigger: true });
+      render();
+      const inputs = document.querySelectorAll('.query-input');
+      inputs[inputs.length - 1].focus();
+    }
+
+    function updateSummary() {
+      const trigger = evalItems.filter(i => i.should_trigger).length;
+      const noTrigger = evalItems.filter(i => !i.should_trigger).length;
+      document.getElementById('summary').textContent =
+        `${evalItems.length} queries total: ${trigger} should trigger, ${noTrigger} should not trigger`;
+    }
+
+    function exportEvalSet() {
+      const valid = evalItems.filter(i => i.query.trim() !== '');
+      const data = valid.map(i => ({ query: i.query.trim(), should_trigger: i.should_trigger }));
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'eval_set.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    render();
+  </script>
+</body>
+</html>

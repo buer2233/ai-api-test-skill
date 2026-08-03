@@ -13,7 +13,7 @@ description: 当前 test-automation 项目内置的接口自动化编写 skill�
 
 ## 🚨 前置门禁（按新增 / 维护分流读取）
 
-- AI 必须先识别任务类型：新增接口方法/用例读取 **@doc/preflight_gates_new.md**；维护已有接口方法/用例读取 **@doc/preflight_gates_maintenance.md**
+- AI 必须先识别任务类型：新增接口方法/用例读取 [`doc/preflight_gates_new.md`](./doc/preflight_gates_new.md)；维护已有接口方法/用例读取 [`doc/preflight_gates_maintenance.md`](./doc/preflight_gates_maintenance.md)
 - 若任务类型不明确，先询问“新增还是维护”；确认后再读取对应前置门禁文件并严格执行
 
 ## 任务类型分流
@@ -37,6 +37,8 @@ description: 当前 test-automation 项目内置的接口自动化编写 skill�
 |---|---|
 | `/test-fixing` | 默认优先使用，用于根据 pytest 失败分组、定位根因、做最小补丁并循环验证 |
 | `/Debugging` | 仅在 `/test-fixing` 无法解决、维护遇到困难，或前后接口信息/调用栈/返回层级不明确时兜底使用；通过断点、执行堆栈、局部变量、请求 payload、接口响应和方法返回值辅助定位 |
+
+若当前 AI 环境没有安装 `/test-fixing`，不要因为依赖缺失而停止任务：直接按本 skill 的“失败排查优先级”和 `doc/mode_maintenance_pytest_driven.md` 执行 pytest、分组根因、做最小补丁并循环验证；只有确需断点或调用栈时再使用可用的 `/Debugging`。
 
 ### 强制按需读取门禁
 
@@ -80,7 +82,7 @@ Mermaid 源文件与导出 PNG 见 `flow_chart/` 目录，当前覆盖前置 hoo
 
 ## 必须遵守的核心原则
 
-@doc/core_principles.md
+详见 [`doc/core_principles.md`](./doc/core_principles.md)。
 
 ## 失败排查优先级
 

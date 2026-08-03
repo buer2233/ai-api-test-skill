@@ -26,6 +26,7 @@
 - `doc/high_frequency_experience.md` —— 仅在踩到对应坑（Codex apply_patch、`show_list`、参数化与断言同步等）时加载。
 - `flow_chart/flow.md` 与同目录 PNG —— Mermaid 源码与导出图。当前导出图覆盖前置 hook、主流程、前置门禁、新增总览、新增四方式、维护总览、维护四方式、pytest 闭环。`flow.md` 实质变化时才更新 PNG。
 - 第三方依赖 Skill：维护方式4默认优先使用 `/test-fixing`；只有 `/test-fixing` 无法解决、维护遇到困难或前后接口/调用栈信息不明确时，才使用 `/Debugging` 断点调试辅助定位。
+- 若当前环境没有 `/test-fixing`，直接按 `doc/mode_maintenance_pytest_driven.md` 的失败分类、最小补丁和循环验证步骤执行，不得因依赖缺失而停止维护。
 
 避免在多个文档间复制策略。这种拆分的目的就是让 `SKILL.md` 保持每次会话固定加载、其余按需拉取。
 

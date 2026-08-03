@@ -20,3 +20,13 @@ capture_selection.md
 /findings.md
 /progress.md
 /task_plan.md
+
+# 触发评估运行时产物（保留测试集与报告脚本，忽略日志/断点/监视器状态）
+evals/trigger-eval/*.log
+evals/trigger-eval/*.checkpoint.json
+evals/trigger-eval/monitor_status.txt
+evals/trigger-eval/monitor_done.txt
+evals/trigger-eval/monitor.log
+# 评估运行生成的报告（测试集与 runner 保留）
+evals/trigger-eval/full_results.json
+evals/trigger-eval/full_results.md
