@@ -1,0 +1,156 @@
+[
+  {
+    "id": 1,
+    "query": "帮我在 E10自动化/接口自动化测试 里新增一个合同审批提交接口的 pytest 用例，接口方法写到 page_api/contract_api.py 末尾，用例写到 test_case/test_contract_api_PC.py 文件末尾，用例名：合同审批-提交审批。我这边抓包服务已经在 12138 起好了，你按抓包驱动来写。",
+    "should_trigger": true,
+    "branch": "new/capture_driven",
+    "category": "新增-抓包驱动"
+  },
+  {
+    "id": 2,
+    "query": "参考 test_case/test_workflow_api_PC.py 里的 test_create_workflow 用例，仿写一个创建流程草稿的接口自动化用例。任务信息如下：接口方法文件=page_api/workflow_api.py 末尾，接口用例文件=test_case/test_workflow_api_PC.py 末尾，用例名=流程-创建草稿。差异点：接口换成 /api/workflow/draft/create，多一个 draftName 字段。",
+    "should_trigger": true,
+    "branch": "new/reference_case",
+    "category": "新增-参考已有用例"
+  },
+  {
+    "id": 3,
+    "query": "抓包用不了，我直接给你 cURL。请在接口自动化里补一个查询组织架构的接口方法和用例。\n# 本次任务信息\n- [接口方法文件]=page_api/org_api.py 文件末尾\n- [接口方法位置]=文件末尾\n- [接口用例文件]=test_case/test_org_api_PC.py\n- [接口用例位置]=文件末尾\n- [用例名]=组织-查询组织树\n\ncurl -X POST 'http://10.12.1.20/api/hrm/org/tree' -H 'Content-Type: application/json' -d '{\"parentId\":0}'\n响应：{\"code\":200,\"data\":[{\"id\":1,\"name\":\"总部\"}]}",
+    "should_trigger": true,
+    "branch": "new/curl_manual",
+    "category": "新增-cURL手工"
+  },
+  {
+    "id": 4,
+    "query": "后端给了这个 Java Controller 源码路径 D:/backend/src/main/java/com/weaver/form/FormController.java，请对照 page_api 索引查一下哪些接口还没写自动化，把未覆盖的补成接口方法和 pytest 用例。接口方法放到 page_api/form_api.py 末尾，用例放到 test_case/test_form_api_PC.py 末尾。",
+    "should_trigger": true,
+    "branch": "new/java_controller",
+    "category": "新增-Java Controller"
+  },
+  {
+    "id": 5,
+    "query": "这个 Jacoco 报告页 http://10.12.101.50:8080/jacoco/com.weaver.attendance/AttendanceController.java.html 里有几个接口自动化还没覆盖，帮我按 Java Controller 源码参考方式补齐到 E10 接口自动化项目里。",
+    "should_trigger": true,
+    "branch": "new/java_controller",
+    "category": "新增-Jacoco补齐"
+  },
+  {
+    "id": 6,
+    "query": "维护一下 test_case/test_leave_api_PC.py 里的 test_submit_leave 用例，链路最近改了。我重新抓了一包，你按抓包驱动维护，把接口方法和断言同步到最新链路。\n# 本次维护任务信息\n- [接口用例文件]=test_case/test_leave_api_PC.py\n- [接口用例位置]=test_submit_leave",
+    "should_trigger": true,
+    "branch": "maintenance/capture_driven",
+    "category": "维护-抓包驱动"
+  },
+  {
+    "id": 7,
+    "query": "test_case/test_budget_api_PC.py 里 test_budget_list 的断言和参数化要按 test_budget_detail 那个风格改一下，参考已有用例做局部维护就行。\n# 本次维护任务信息\n- [接口用例文件]=test_case/test_budget_api_PC.py\n- [接口用例位置]=test_budget_list",
+    "should_trigger": true,
+    "branch": "maintenance/reference_case",
+    "category": "维护-参考已有用例"
+  },
+  {
+    "id": 8,
+    "query": "帮忙定点修一下 test_case/test_meeting_api_PC.py::TestMeeting::test_book_meeting，接口 payload 变了。我贴 cURL 和响应，你对照旧实现维护。\n# 本次维护任务信息\n- [接口用例文件]=test_case/test_meeting_api_PC.py\n- [接口用例位置]=test_book_meeting\n\ncurl 'http://10.12.1.20/api/meeting/book' -H 'Content-Type: application/json' --data-raw '{\"roomId\":12,\"startTime\":\"2026-08-01 10:00\"}'",
+    "should_trigger": true,
+    "branch": "maintenance/curl_manual",
+    "category": "维护-cURL手工"
+  },
+  {
+    "id": 9,
+    "query": "直接跑 test_case/test_attendance_api_PC.py::TestAttendance::test_clock_in，失败了你就按报错修，修到 pytest 通过为止。我懒得贴日志了，你自己执行闭环。\n# 本次维护任务信息\n- [接口用例文件]=test_case/test_attendance_api_PC.py\n- [接口用例位置]=test_clock_in",
+    "should_trigger": true,
+    "branch": "maintenance/pytest_driven",
+    "category": "维护-pytest报错驱动"
+  },
+  {
+    "id": 10,
+    "query": "帮我查一下 /api/workflow/request/create 这个 URL 在 page_api 里有没有重复实现，有的话列出来别再写一遍了。",
+    "should_trigger": true,
+    "branch": "utility/url_dedup",
+    "category": "工具-URL查重"
+  },
+  {
+    "id": 11,
+    "query": "接口自动化用例 test_case/test_hrm_api_PC.py 里中文全变成问号乱码了，帮我按 UTF-8 无 BOM 修一下编码，顺便检查导入路径。",
+    "should_trigger": true,
+    "branch": "utility/encoding_fix",
+    "category": "工具-编码修复"
+  },
+  {
+    "id": 12,
+    "query": "在 E10 接口自动化里给报销模块补参数化：test_case/test_expense_api_PC.py 的 test_expense_submit 要支持正常/金额超限/缺少附件三组数据，断言也要跟着同步。",
+    "should_trigger": true,
+    "branch": "new_or_maintenance/parametrize",
+    "category": "新增维护-参数化补齐"
+  },
+  {
+    "id": 13,
+    "query": "把 UI 自动化里 testcases/test_login_case.py 的登录流程改稳定一点，Selenium 经常点不到登录按钮，加个显式等待。",
+    "should_trigger": false,
+    "branch": "negative/ui_automation",
+    "category": "负例-UI自动化"
+  },
+  {
+    "id": 14,
+    "query": "帮我写个 Python 单元测试，测 utils/date_helper.py 里的 format_date 函数，用 pytest 就行，跟 E10 业务接口无关。",
+    "should_trigger": false,
+    "branch": "negative/unit_test",
+    "category": "负例-纯单元测试"
+  },
+  {
+    "id": 15,
+    "query": "我们前端 Vue 项目里调用了 /api/user/info，帮我在 axios 封装里加个请求拦截器自动带 token。这是前端代码，不是接口自动化仓库。",
+    "should_trigger": false,
+    "branch": "negative/frontend",
+    "category": "负例-前端开发"
+  },
+  {
+    "id": 16,
+    "query": "Jenkins 上接口自动化 job 挂了，帮我看下 Jenkinsfile 里 pytest 命令和 HTML 报告路径配置对不对，先别改业务用例。",
+    "should_trigger": false,
+    "branch": "negative/ci_config",
+    "category": "负例-CI配置"
+  },
+  {
+    "id": 17,
+    "query": "解释一下 mitmproxy 怎么装、怎么设系统代理，我只是想自己抓包看请求，暂时不写 E10 接口自动化用例。",
+    "should_trigger": false,
+    "branch": "negative/tool_howto",
+    "category": "负例-工具科普"
+  },
+  {
+    "id": 18,
+    "query": "把 E10自动化/UI自动化 下 pageObject 的 BasePage 抽一层公共点击方法，跟接口测试无关。",
+    "should_trigger": false,
+    "branch": "negative/ui_pageobject",
+    "category": "负例-UI PageObject"
+  },
+  {
+    "id": 19,
+    "query": "数据库里 workflow_request 表结构变了，帮我写个 SQL 迁移脚本并更新对应 MyBatis mapper，不用动自动化测试。",
+    "should_trigger": false,
+    "branch": "negative/backend_sql",
+    "category": "负例-后端SQL"
+  },
+  {
+    "id": 20,
+    "query": "这个 Allure 报告样式能不能改成公司主题色？主要是 UI 自动化 reports 目录那套，不是接口 HTML 报告。",
+    "should_trigger": false,
+    "branch": "negative/report_style",
+    "category": "负例-报告样式"
+  },
+  {
+    "id": 21,
+    "query": "接口自动化目录里有个历史用例 test_old_ bid_api，文件名和类名都乱，帮我重命名整理一下目录结构，先不要新增接口逻辑。",
+    "should_trigger": true,
+    "branch": "maintenance/refactor_existing",
+    "category": "维护-已有用例整理（边界）"
+  },
+  {
+    "id": 22,
+    "query": "跑一下 E10 接口自动化全量 pytest 看看现在有多少失败，先出个失败清单，暂时先别改代码。",
+    "should_trigger": true,
+    "branch": "utility/pytest_inventory",
+    "category": "工具-pytest摸底（边界）"
+  }
+]

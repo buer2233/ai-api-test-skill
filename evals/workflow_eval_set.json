@@ -1,0 +1,280 @@
+{
+  "schema_version": 1,
+  "skill": "api-test-E10",
+  "purpose": "评估技能是否能在触发后正确分流、读取门禁文档、选择方案并控制副作用。",
+  "cases": [
+    {
+      "id": "new_capture",
+      "category": "new",
+      "branch": "new/capture_driven",
+      "prompt": "在 E10 接口自动化中新增一个合同审批提交接口方法和 pytest 用例。抓包服务已在 12138 启动，按抓包驱动执行，方法和用例都追加到用户指定文件末尾。",
+      "expected_trigger": true,
+      "expected_task_type": "new",
+      "expected_mode": "capture_driven",
+      "must_read": [
+        "doc/preflight_gates_new.md",
+        "doc/coding_style_guide.md",
+        "doc/mode_capture_driven.md"
+      ],
+      "expected_outputs": [
+        "新增接口方法清单",
+        "新增接口用例清单",
+        "pytest 命令与结果"
+      ],
+      "must": [
+        "先通过新增任务门禁",
+        "写入前检查 URL 重复实现和文件编码",
+        "说明抓包服务不可用时的阻塞原因"
+      ],
+      "must_not": [
+        "未经用户授权修改非目标模块",
+        "把抓包失败伪装成接口成功"
+      ]
+    },
+    {
+      "id": "new_reference_case",
+      "category": "new",
+      "branch": "new/reference_case",
+      "prompt": "参考现有 workflow 用例的结构，在指定 page_api 和 test_case 文件末尾新增流程草稿创建接口测试，接口 URL 和请求字段以本任务为准。",
+      "expected_trigger": true,
+      "expected_task_type": "new",
+      "expected_mode": "reference_case",
+      "must_read": [
+        "doc/preflight_gates_new.md",
+        "doc/coding_style_guide.md",
+        "doc/mode_reference_case.md"
+      ],
+      "expected_outputs": [
+        "参考用例与新增用例的差异说明",
+        "接口方法和用例清单",
+        "pytest 结果"
+      ],
+      "must": [
+        "先读取参考用例和对应方案文档",
+        "保留项目既有 fixture、marker 和断言风格"
+      ],
+      "must_not": [
+        "整文件重写",
+        "凭空编造未提供的响应字段"
+      ]
+    },
+    {
+      "id": "new_curl_manual",
+      "category": "new",
+      "branch": "new/curl_manual",
+      "prompt": "抓包不可用。根据用户提供的 cURL、响应示例、目标方法文件和用例文件，在 E10 接口自动化中新增查询组织架构接口方法和 pytest 用例。",
+      "expected_trigger": true,
+      "expected_task_type": "new",
+      "expected_mode": "curl_manual",
+      "must_read": [
+        "doc/preflight_gates_new.md",
+        "doc/coding_style_guide.md",
+        "doc/mode_curl_manual.md"
+      ],
+      "expected_outputs": [
+        "请求方法、URL、payload 与响应映射",
+        "新增接口方法和用例清单",
+        "pytest 结果或明确的环境阻塞"
+      ],
+      "must": [
+        "优先解析 cURL 的 method、headers、payload",
+        "对响应示例只断言稳定字段"
+      ],
+      "must_not": [
+        "因为抓包不可用而停止整个任务",
+        "把示例中的动态值写成硬编码断言"
+      ]
+    },
+    {
+      "id": "new_java_controller",
+      "category": "new",
+      "branch": "new/java_controller",
+      "prompt": "根据 Java Controller 源码或 Jacoco 页面，对照 page_api 索引找出未覆盖接口，并补齐接口方法和 pytest 用例。",
+      "expected_trigger": true,
+      "expected_task_type": "new",
+      "expected_mode": "java_controller",
+      "must_read": [
+        "doc/preflight_gates_new.md",
+        "doc/coding_style_guide.md",
+        "doc/mode_java_controller_source.md"
+      ],
+      "expected_outputs": [
+        "Controller 接口与已有 URL 索引的差异",
+        "新增方法/用例清单",
+        "索引更新说明"
+      ],
+      "must": [
+        "先用索引查重再写代码",
+        "无法访问源码或 Jacoco 时说明证据不足"
+      ],
+      "must_not": [
+        "把未确认的 Controller 方法当成已覆盖",
+        "未经验证批量生成接口"
+      ]
+    },
+    {
+      "id": "maintenance_capture",
+      "category": "maintenance",
+      "branch": "maintenance/capture_driven",
+      "prompt": "维护已有请假提交用例。链路已变更，抓包服务可用，请同步接口方法、payload、断言和用例。",
+      "expected_trigger": true,
+      "expected_task_type": "maintenance",
+      "expected_mode": "capture_driven",
+      "must_read": [
+        "doc/preflight_gates_maintenance.md",
+        "doc/coding_style_guide.md",
+        "doc/maintenance_prompt_context.md",
+        "doc/mode_maintenance_capture_driven.md"
+      ],
+      "expected_outputs": [
+        "维护目标与变更点",
+        "修改接口方法/用例清单",
+        "pytest 结果"
+      ],
+      "must": [
+        "先定位现有实现和调用链",
+        "只做与链路变更相关的最小修改"
+      ],
+      "must_not": [
+        "按新增流程追加重复用例",
+        "覆盖用户未指定的历史行为"
+      ]
+    },
+    {
+      "id": "maintenance_reference_case",
+      "category": "maintenance",
+      "branch": "maintenance/reference_case",
+      "prompt": "维护预算列表用例，使其断言和参数化风格与预算详情用例一致，要求局部修改并保留现有业务语义。",
+      "expected_trigger": true,
+      "expected_task_type": "maintenance",
+      "expected_mode": "reference_case",
+      "must_read": [
+        "doc/preflight_gates_maintenance.md",
+        "doc/coding_style_guide.md",
+        "doc/maintenance_prompt_context.md",
+        "doc/mode_maintenance_reference_case.md"
+      ],
+      "expected_outputs": [
+        "参考用例与目标用例差异",
+        "局部修改清单",
+        "定向 pytest 结果"
+      ],
+      "must": [
+        "区分可迁移风格和不可迁移业务断言",
+        "验证参数化数据与 fixture 的兼容性"
+      ],
+      "must_not": [
+        "复制详情接口的业务断言",
+        "无关重构"
+      ]
+    },
+    {
+      "id": "maintenance_curl_manual",
+      "category": "maintenance",
+      "branch": "maintenance/curl_manual",
+      "prompt": "已有会议预约接口的 payload 变更。用户提供新的 cURL 和响应，请对照旧实现定点维护接口方法与断言。",
+      "expected_trigger": true,
+      "expected_task_type": "maintenance",
+      "expected_mode": "curl_manual",
+      "must_read": [
+        "doc/preflight_gates_maintenance.md",
+        "doc/coding_style_guide.md",
+        "doc/maintenance_prompt_context.md",
+        "doc/mode_maintenance_curl_manual.md"
+      ],
+      "expected_outputs": [
+        "旧 payload 与新 cURL 差异",
+        "定点修改清单",
+        "定向 pytest 结果"
+      ],
+      "must": [
+        "保留未变更字段和登录态处理",
+        "对照真实响应更新断言层级"
+      ],
+      "must_not": [
+        "把维护任务改写为新增任务",
+        "只改测试断言而忽略接口方法"
+      ]
+    },
+    {
+      "id": "maintenance_pytest_driven",
+      "category": "maintenance",
+      "branch": "maintenance/pytest_driven",
+      "prompt": "运行指定接口自动化用例，根据真实 pytest 报错定位并修复，循环验证直到通过或确认是环境/登录态阻塞。",
+      "expected_trigger": true,
+      "expected_task_type": "maintenance",
+      "expected_mode": "pytest_driven",
+      "must_read": [
+        "doc/preflight_gates_maintenance.md",
+        "doc/coding_style_guide.md",
+        "doc/maintenance_prompt_context.md",
+        "doc/mode_maintenance_pytest_driven.md"
+      ],
+      "expected_outputs": [
+        "失败分组与根因",
+        "每轮修复与验证结果",
+        "最终通过统计或环境阻塞说明"
+      ],
+      "must": [
+        "按导入、编码、fixture、登录态、响应结构顺序排查",
+        "每次修改后重新运行目标用例"
+      ],
+      "must_not": [
+        "没有运行 pytest 就声称通过",
+        "把环境/网络错误当成代码修复完成"
+      ]
+    },
+    {
+      "id": "utility_url_dedup",
+      "category": "utility",
+      "branch": "utility/url_dedup",
+      "prompt": "查询指定 URL 在 page_api 中是否已有重复实现，只输出匹配位置和建议，不新增接口代码。",
+      "expected_trigger": true,
+      "expected_task_type": "utility",
+      "expected_mode": "url_dedup",
+      "must_read": ["doc/core_principles.md"],
+      "expected_outputs": ["URL 匹配结果", "是否重复的结论", "无匹配时的明确说明"],
+      "must": ["优先使用项目索引/匹配工具", "保持只读"],
+      "must_not": ["为了验证而修改业务文件", "把路径相似误报为 URL 重复"]
+    },
+    {
+      "id": "utility_encoding_fix",
+      "category": "utility",
+      "branch": "utility/encoding_fix",
+      "prompt": "修复接口自动化用例的中文乱码为 UTF-8 无 BOM，并检查导入路径，保留业务逻辑不变。",
+      "expected_trigger": true,
+      "expected_task_type": "utility",
+      "expected_mode": "encoding_fix",
+      "must_read": ["doc/coding_style_guide.md", "doc/high_frequency_experience.md"],
+      "expected_outputs": ["编码检测结果", "导入检查结果", "修改后验证结果"],
+      "must": ["先确认文件确实存在乱码或编码问题", "修改后重新读取并编译"],
+      "must_not": ["用替换问号的方式伪造原始中文", "顺便改业务断言"]
+    },
+    {
+      "id": "utility_pytest_inventory",
+      "category": "utility",
+      "branch": "utility/pytest_inventory",
+      "prompt": "运行 E10 接口自动化全量 pytest，只统计失败清单，不修改业务用例。",
+      "expected_trigger": true,
+      "expected_task_type": "utility",
+      "expected_mode": "pytest_inventory",
+      "must_read": ["doc/core_principles.md"],
+      "expected_outputs": ["执行命令", "通过/失败/跳过统计", "失败用例清单"],
+      "must": ["保持只读并区分环境失败与代码失败", "报告实际统计"],
+      "must_not": ["自动修复业务代码", "没有执行就虚构统计"]
+    },
+    {
+      "id": "negative_ui_automation",
+      "category": "negative",
+      "branch": "negative/ui_automation",
+      "prompt": "给 Selenium UI 登录流程加显式等待。该任务不涉及 E10 接口自动化。",
+      "expected_trigger": false,
+      "expected_task_type": "negative",
+      "expected_mode": null,
+      "must_read": [],
+      "expected_outputs": ["不加载 api-test-E10 技能"],
+      "must": ["按 UI 自动化上下文处理或请求对应技能"],
+      "must_not": ["读取接口自动化门禁并修改 page_api"]
+    }
+  ]
+}
