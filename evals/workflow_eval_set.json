@@ -264,6 +264,45 @@
       "must_not": ["自动修复业务代码", "没有执行就虚构统计"]
     },
     {
+      "id": "new_api_tpl",
+      "category": "new",
+      "branch": "new/api_tpl",
+      "prompt": "根据 git-diff-analyse 输出的 api-landing.md 中已勾选 [x] 的 API-TPL 模版，按方式5（API-TPL驱动）在 E10 接口自动化中新增 page_api 接口方法和 pytest 用例。需要严格遵循 mode_api_tpl.md 的7步执行流程。",
+      "expected_trigger": true,
+      "expected_task_type": "new",
+      "expected_mode": "api_tpl",
+      "must_read": [
+        "doc/preflight_gates_new.md",
+        "doc/coding_style_guide.md",
+        "doc/mode_api_tpl.md"
+      ],
+      "expected_outputs": [
+        "API-TPL勾选范围确认",
+        "L1 {param}模糊查重结果",
+        "新增接口方法清单（含触发步骤:）",
+        "新增接口用例清单（含——语义备注）",
+        "pytest 命令与通过结果",
+        "调试打印已删除确认"
+      ],
+      "must": [
+        "先读 api-landing.md 确认 [x] 勾选范围",
+        "用 page_api_index.sqlite3 做 {param} 模糊 L1 查重",
+        "新增方法 docstring 必须含 触发步骤: 前缀",
+        "用例 docstring 标题必须含 —— 语义化备注",
+        "pytest 全部通过后删除调试 print",
+        "交付前刷新 page_api_index"
+      ],
+      "must_not": [
+        "整份读取 ai-result.md",
+        "读取 functional-cases.html 写自动化",
+        "编造与功能用例无关的触发步骤",
+        "用例标题缺 —— 语义备注",
+        "git commit / git push",
+        "处理未勾选 [ ] 的 API-TPL",
+        "URL 全等匹配忽略 {param} 占位符"
+      ]
+    },
+    {
       "id": "negative_ui_automation",
       "category": "negative",
       "branch": "negative/ui_automation",

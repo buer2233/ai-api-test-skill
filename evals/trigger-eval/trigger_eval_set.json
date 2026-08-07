@@ -152,5 +152,40 @@
     "should_trigger": true,
     "branch": "utility/pytest_inventory",
     "category": "工具-pytest摸底（边界）"
+  },
+  {
+    "id": 23,
+    "query": "请使用 api-test-E10 技能，按方式5 API-TPL 模版落地流程，处理 git-diff-analyse 报告中我勾选的 API-TPL-001 到 API-TPL-005。api-landing.md 在 output/run-2026-08-07/ 目录下，按方式5的7步流程执行。",
+    "should_trigger": true,
+    "branch": "new/api_tpl",
+    "category": "新增-API-TPL驱动"
+  },
+  {
+    "id": 24,
+    "query": "按方式5帮我处理 output/run-latest/api-landing.md 里勾选了 [x] 的 API-TPL 条目，新增对应的 page_api 方法和 pytest 用例到 E10 接口自动化项目里。注意要用 {param} 模糊匹配查重，方法 docstring 必须写触发步骤。",
+    "should_trigger": true,
+    "branch": "new/api_tpl",
+    "category": "新增-API-TPL驱动"
+  },
+  {
+    "id": 25,
+    "query": "按方式5流程，把 api-landing.md 里我勾了 [x] 的 API-TPL 模版（EB 表单数据共享和群聊创建接口）落地成接口方法和 pytest 用例，触发步骤和语义化用例标题一个都不能少。",
+    "should_trigger": true,
+    "branch": "new/api_tpl",
+    "category": "新增-API-TPL驱动"
+  },
+  {
+    "id": 26,
+    "query": "帮我看一下 api-landing.md 里哪些 API-TPL 还没勾选，我先审核一下再决定要不要落地。只是查看，先不写代码。",
+    "should_trigger": false,
+    "branch": "negative/api_tpl_readonly",
+    "category": "负例-API-TPL只读查看"
+  },
+  {
+    "id": 27,
+    "query": "在 E10 接口自动化里新增接口方法和 pytest 用例——git-diff-analyse 的 ai-result.md 报告里提到了几个未覆盖接口，帮我补齐。注意这不是 API-TPL 模版落地，是普通新增，按新增流程选合适的方式。",
+    "should_trigger": true,
+    "branch": "new_or_maintenance/generic_new",
+    "category": "新增-通用补齐（非方式5）"
   }
 ]

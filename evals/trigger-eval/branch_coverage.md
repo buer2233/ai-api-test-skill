@@ -13,9 +13,9 @@
 
 | 类型 | 数量 | 说明 |
 |---|---:|---|
-| Should Trigger | 14 | 应触发本 skill |
-| Should NOT Trigger | 8 | 近邻负例（故意带相关关键词） |
-| **合计** | **22** | |
+| Should Trigger | 18 | 应触发本 skill |
+| Should NOT Trigger | 9 | 近邻负例（故意带相关关键词） |
+| **合计** | **27** | |
 
 ## 分支路径覆盖（Should Trigger）
 
@@ -32,6 +32,8 @@
 | `utility/url_dedup` | 工具-URL查重 | 10 | description 明确覆盖场景 |
 | `utility/encoding_fix` | 工具-编码修复 | 11 | UTF-8 / 乱码 |
 | `new_or_maintenance/parametrize` | 参数化补齐 | 12 | 补参数化+断言同步 |
+| `new/api_tpl` | 新增-API-TPL驱动 | 23, 24, 25 | 方式5 api-landing 模版落地 |
+| `new_or_maintenance/generic_new` | 新增-通用补齐（非方式5） | 27 | ai-result 通用补齐，不走方式5 |
 | `maintenance/refactor_existing` | 边界-整理已有用例 | 21 | 维护边界，期望触发 |
 | `utility/pytest_inventory` | 边界-pytest摸底 | 22 | 只摸底不改代码，期望触发 |
 
@@ -49,6 +51,7 @@
 | `negative/ui_pageobject` | 18 | E10自动化 但 UI PageObject |
 | `negative/backend_sql` | 19 | 业务表变更，不动测试 |
 | `negative/report_style` | 20 | 报告但 Allure/UI |
+| `negative/api_tpl_readonly` | 26 | api-landing 但只读查看不落地 |
 
 ## 指标怎么算
 
@@ -70,7 +73,7 @@ branch_trigger_rate(branch) = mean(trigger_rate(q) for q in branch)
 
 建议重点盯：
 
-- 8 条主执行路径（new×4 + maintenance×4）是否都能稳定 > 0.8
+- 9 条主执行路径（new×5 + maintenance×4）是否都能稳定 > 0.8
 - 边界正例 21/22 是否误伤为不触发
 - 近邻负例 13–20 是否被关键词误触发
 
