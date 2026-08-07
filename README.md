@@ -98,6 +98,7 @@ python tools/scan_page_api.py --full
 | 新增 | 参考已有用例 | 同类批量、参数断言调整 | [`doc/mode_reference_case.md`](./doc/mode_reference_case.md) |
 | 新增 | cURL 手工 | 抓包不可用、数据过大 | [`doc/mode_curl_manual.md`](./doc/mode_curl_manual.md) |
 | 新增 | Java Controller 源码参考 | 后端已有接口定义但自动化未覆盖 | [`doc/mode_java_controller_source.md`](./doc/mode_java_controller_source.md) |
+| 新增 | API-TPL 驱动（git-diff-analyse 一期） | 分析报告勾选模版按标准化流程落地 | [`doc/mode_api_tpl.md`](./doc/mode_api_tpl.md) |
 | 维护 | 抓包驱动 | 链路变化大、多接口联动 | [`doc/mode_maintenance_capture_driven.md`](./doc/mode_maintenance_capture_driven.md) |
 | 维护 | 参考已有用例 | 同类结构稳定 | [`doc/mode_maintenance_reference_case.md`](./doc/mode_maintenance_reference_case.md) |
 | 维护 | cURL 手工 | 少量接口变化明确 | [`doc/mode_maintenance_curl_manual.md`](./doc/mode_maintenance_curl_manual.md) |
@@ -115,7 +116,7 @@ python tools/scan_page_api.py --full
 ├── README_EN.md                 # 英文说明文档
 ├── SKILL.md                     # AI 执行规范入口
 ├── detailedUserManual.md        # 详细的使用手册
-├── doc/                         # 前置门禁、核心原则、四种新增/维护模式说明
+├── doc/                         # 前置门禁、核心原则、五种新增/四种维护模式说明
 ├── tools/                       # 接口索引、抓包匹配、Controller 分析等工具脚本
 ├── capture/                     # mitmproxy 抓包服务与过滤配置
 ├── skill_utils/                 # 多工具复用的路径、配置、索引等公共能力
