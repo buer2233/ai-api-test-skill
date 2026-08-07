@@ -2,7 +2,7 @@
 
 本文件使用 [Mermaid](https://mermaid.js.org/) 绘制。VSCode / GitHub / Obsidian / Typora 等均可直接渲染。
 
-> 新增任务前置门禁见 `doc/preflight_gates_new.md`，维护任务前置门禁见 `doc/preflight_gates_maintenance.md`。新增任务的四种方式已拆分到 `doc/mode_capture_driven.md`、`doc/mode_reference_case.md`、`doc/mode_curl_manual.md`、`doc/mode_java_controller_source.md`；维护任务的四种方式已拆分到 `doc/mode_maintenance_*.md`，维护共用提示词见 `doc/maintenance_prompt_context.md`。本文件仅维护流程图与决策关系。
+> 新增任务前置门禁见 `doc/preflight_gates_new.md`，维护任务前置门禁见 `doc/preflight_gates_maintenance.md`。新增任务的五种方式已拆分到 `doc/mode_capture_driven.md`、`doc/mode_reference_case.md`、`doc/mode_curl_manual.md`、`doc/mode_java_controller_source.md`、`doc/mode_api_tpl.md`；维护任务的四种方式已拆分到 `doc/mode_maintenance_*.md`，维护共用提示词见 `doc/maintenance_prompt_context.md`。本文件仅维护流程图与决策关系。
 
 ---
 
@@ -43,7 +43,7 @@ flowchart TD
     NoNewApi --> NewMode{新增方式已确定?<br/>含自动推断}
     HasNewApi --> NewMode
     NewMode -- 是 --> NewTodo[TodoWrite 首项:<br/>新增 + 方式N + 5 项任务信息]
-    NewMode -- 否 --> NewAsk[按 preflight_gates_new.md<br/>询问新增四选一]
+    NewMode -- 否 --> NewAsk[按 preflight_gates_new.md<br/>询问新增方式]
     NewAsk --> NewTodo
 
     ReadMaint --> MaintInfo{维护 2 项<br/>任务信息齐全?}
@@ -60,6 +60,7 @@ flowchart TD
     Dispatch -- 新增-方式② --> Flow2A[新增方式2: 参考已有用例]
     Dispatch -- 新增-方式③ --> Flow3A[新增方式3: cURL 手工]
     Dispatch -- 新增-方式④ --> Flow4A[新增方式4: Java Controller 源码参考]
+    Dispatch -- 新增-方式⑤ --> Flow5A[新增方式5: API-TPL 驱动]
     Dispatch -- 维护-方式① --> Flow1B[维护方式1: 抓包驱动]
     Dispatch -- 维护-方式② --> Flow2B[维护方式2: 参考已有用例]
     Dispatch -- 维护-方式③ --> Flow3B[维护方式3: cURL 手工]
@@ -69,6 +70,7 @@ flowchart TD
     Flow2A --> Pytest
     Flow3A --> Pytest
     Flow4A --> Pytest
+    Flow5A --> Pytest
     Flow1B --> Pytest
     Flow2B --> Pytest
     Flow3B --> Pytest
@@ -115,7 +117,7 @@ flowchart LR
     MInfo -- 是 --> MMode{维护方式已定?}
 
     NMode -- 任务有信号 --> AutoN[自动推断新增方式]
-    NMode -- 无信号 --> AskN[新增四选一菜单]
+    NMode -- 无信号 --> AskN[新增方式菜单]
     NMode -- 用户已回复数字 --> TakeN[采纳新增方式]
 
     MMode -- 任务有信号 --> AutoM[自动推断维护方式]
@@ -162,9 +164,9 @@ flowchart TD
 
     NoNew --> Mode{新增方式已确定?}
     HasNew --> Mode
-    Mode -- 任务有明确信号 --> AutoMode[自动推断<br/>方式1 / 方式2 / 方式3 / 方式4]
+    Mode -- 任务有明确信号 --> AutoMode[自动推断<br/>方式1~5]
     Mode -- 用户已回复数字 --> TakeMode[采纳用户选择]
-    Mode -- 否 --> AskMode[照抄新增四选一菜单<br/>等用户选择]
+    Mode -- 否 --> AskMode[照抄新增方式菜单<br/>等用户选择]
     AskMode --> TakeMode
 
     AutoMode --> ReadDocs[读取 coding_style_guide.md<br/>+ 对应 mode_*.md]
@@ -174,18 +176,20 @@ flowchart TD
     Dispatch --> N2[新增方式2：参考已有用例]
     Dispatch --> N3[新增方式3：cURL 手工]
     Dispatch --> N4[新增方式4：Java Controller 源码参考]
+    Dispatch --> N5[新增方式5：API-TPL 驱动]
 
     N1 --> VerifyN[pytest 闭环]
     N2 --> VerifyN
     N3 --> VerifyN
     N4 --> VerifyN
+    N5 --> VerifyN
     VerifyN --> NEnd([完成新增])
 
     classDef nWait fill:#fc8,stroke:#c80,color:#000
     classDef nPass fill:#8f8,stroke:#080,color:#000
     classDef nReject fill:#f88,stroke:#c00,color:#000
     class ReadGate,AskInfo,AskMode,ReadDocs nWait
-    class NoNew,HasNew,N1,N2,N3,N4,NEnd nPass
+    class NoNew,HasNew,N1,N2,N3,N4,N5,NEnd nPass
     class RejectPair nReject
 ```
 
@@ -195,7 +199,7 @@ flowchart TD
 - `[fixture]` 为选填，不参与缺项判定；其余字段必须是真实文件、真实位置和完整中文用例名。
 - `[接口方法文件]` 与 `[接口方法位置]` 可同时声明“当前用例无新增接口”；只声明一项时必须打回。
 - 声明“无新增接口”后，后续只能复用仓库现有接口方法，不得新增接口方法。
-- 方式未明确时必须照抄新增四选一菜单；有明确抓包、参考样本、cURL 或 Java Controller/Jacoco 信号时可自动推断。
+- 方式未明确时必须照抄新增方式菜单；有明确抓包、参考样本、cURL、Java Controller/Jacoco 或 **API-TPL / api-landing.md** 信号时可自动推断。
 - 进入具体方式前，必须读取 `doc/coding_style_guide.md` 与对应 `doc/mode_*.md`。
 
 ---
@@ -396,7 +400,106 @@ flowchart TD
 
 ---
 
-## 八、维护任务总览（入口到方式分流）
+## 八、新增方式⑤：API-TPL 驱动
+
+```mermaid
+flowchart TD
+    F5Start([方式5 入口]) --> ReadMode[读取 doc/mode_api_tpl.md<br/>+ coding_style_guide.md<br/>+ preflight_gates_new.md]
+    ReadMode --> Landing{存在 api-landing.md?}
+    Landing -- 否 --> Export[export-report-artifacts<br/>从 ai-result 导出落地包]
+    Export --> Landing2{导出后存在?}
+    Landing2 -- 否 --> AskLanding[打回: 提供 run 目录<br/>或先完成分析报告]
+    AskLanding --> F5End0([终止])
+    Landing2 -- 是 --> ReadLanding
+    Landing -- 是 --> ReadLanding
+
+    ReadLanding[只读 api-landing.md<br/>禁止整份加载 ai-result.md<br/>禁止用 functional-cases.html 写自动化]
+    ReadLanding --> Checked{存在人工勾选<br/>x 的 API-TPL?}
+    Checked -- 否 --> RejectNone[打回: 未勾选不得新增<br/>保持待批准]
+    RejectNone --> F5End1([终止])
+    Checked -- 是 --> Scope[步骤0: 只处理 x 条目<br/>记录 id/method/path/params<br/>trigger_steps/related_tc]
+
+    Scope --> MaintSkip{方式4维护区<br/>是否全为 空勾选?}
+    MaintSkip -- 是 --> SkipMaint[跳过维护<br/>零改动既有用例]
+    MaintSkip -- 否 --> NoteMaint[维护项另走方式4<br/>本流程不写方式4]
+    SkipMaint --> Loop
+    NoteMaint --> Loop
+
+    Loop[逐条处理 API-TPL-x] --> L1[步骤1: L1 查重<br/>page_api_index.sqlite3<br/>api_url + method]
+    L1 --> ParamMatch{路径含 param 占位?}
+    ParamMatch -- 是 --> Fuzzy[多段模糊匹配<br/>字面量段必须一致]
+    ParamMatch -- 否 --> Exact[路径结构匹配]
+    Fuzzy --> Hit{索引命中?}
+    Exact --> Hit
+
+    Hit -- 是 --> Reuse[复用已有方法<br/>URL 写真实路径<br/>不得重复新增]
+    Hit -- 否 --> Place[步骤2: 定落点<br/>placement_hints / 同模块目录]
+    Place --> NewMethod[步骤3: 新增 page_api 方法<br/>coding_style_guide 结构]
+    NewMethod --> Trigger{docstring 含<br/>触发步骤?}
+    Trigger -- 否 --> FixTrigger[补写触发步骤<br/>来源 TPL.trigger_steps / related_tc]
+    FixTrigger --> Trigger
+    Trigger -- 是 --> CaseWrite
+    Reuse --> NeedTrigger{复用方法缺<br/>触发步骤?}
+    NeedTrigger -- 是 --> FixTrigger2[补写触发步骤]
+    FixTrigger2 --> CaseWrite
+    NeedTrigger -- 否 --> CaseWrite
+
+    CaseWrite[步骤4: 编写 pytest 用例<br/>成熟前置 add_form_data<br/>标题须 语义备注]
+    CaseWrite --> TitleOk{用例 docstring<br/>含 语义备注?}
+    TitleOk -- 否 --> FixTitle[补写 验证点]
+    FixTitle --> TitleOk
+    TitleOk -- 是 --> Discipline{假绿/skip/编造参数?}
+    Discipline -- 是 --> RejectBad[打回修正]
+    RejectBad --> CaseWrite
+    Discipline -- 否 --> Pytest[步骤5: pytest 闭环<br/>test_case + PYTHONPATH=.]
+
+    Pytest --> Pass{通过?}
+    Pass -- 否 --> FixReal[按真实返回修方法/断言<br/>删除临时 print 前先绿]
+    FixReal --> Pytest
+    Pass -- 是 --> Clean[删除调试 print<br/>建议再跑一遍确认]
+    Clean --> More{还有未处理<br/>API-TPL-x?}
+    More -- 是 --> Loop
+    More -- 否 --> ScanIdx[步骤6: 刷新 page_api_index]
+    ScanIdx --> Deliver[步骤7: 输出方法/用例清单<br/>pytest 结果 / 禁止 commit push]
+    Deliver --> F5End([返回总览])
+
+    classDef f5wait fill:#fc8,stroke:#c80,color:#000
+    classDef f5pass fill:#8f8,stroke:#080,color:#000
+    classDef f5reject fill:#f88,stroke:#c00,color:#000
+    class AskLanding,RejectNone,RejectBad,FixTrigger,FixTrigger2,FixTitle,FixReal f5wait
+    class F5End,Deliver,Reuse,NewMethod f5pass
+    class F5End0,F5End1 f5reject
+```
+
+### 方式⑤ 关键动作与产物
+
+| 步骤 | 动作 | 产物/输出 |
+|---|---|---|
+| 0 | 确认勾选范围 | 只处理 `api-landing.md` 中 `[x]` 的 `API-TPL-*`；记录 method/path/params/`trigger_steps`/`related_tc` |
+| 1 | L1 查重 | `tools/page_api_index.sqlite3`；`{param}` **多段模糊匹配**，禁止只做字符串全等 |
+| 2 | 定落点 | `placement_hints` / 同模块 page_api；`{param}` 命中后 URL 写真实路径；拼接规则对齐同类文件 |
+| 3 | 编写/复用 page_api | 通用结构遵守 `coding_style_guide.md`；**方式5 专属** docstring 必含 **`触发步骤:`** |
+| 4 | 编写 pytest 用例 | 成熟前置（如 `add_form_data`）；用例标题 **`——` 语义备注**；禁止 skip/假绿/编造参数 |
+| 5 | pytest 闭环 | `test_case` + `PYTHONPATH=.`；按真实返回修到绿；通过后删调试打印 |
+| 6 | 刷新索引 | 更新 `page_api_index.sqlite3` |
+| 7 | 停止交付 | 方法/用例清单 + pytest 结果；**禁止 git commit / push** |
+
+### 方式⑤ 关键原则（禁止行为）
+
+| 动作 | 是否允许 |
+|---|---|
+| 处理未勾选 `[ ]` 的 API-TPL | ❌ 禁止 |
+| 整份加载 `ai-result.md` 做方式5 | ❌ 禁止（主输入仅 `api-landing.md`） |
+| 用 `functional-cases.html` 写自动化 | ❌ 禁止 |
+| 编造 URL / 参数名 / 与 TC 无关的触发步骤 | ❌ 禁止 |
+| 新增方法缺 `触发步骤:` 或用例标题无 `——` 语义备注 | ❌ 不合格交付 |
+| 把方式5 流程写进方式4 / 改方式4 文档 | ❌ 禁止 |
+| pytest 通过后仍保留大段调试 `print` | ❌ 禁止 |
+| AI 执行 `git commit` / `git push` | ❌ 禁止 |
+
+---
+
+## 九、维护任务总览（入口到方式分流）
 
 ```mermaid
 flowchart TD
@@ -444,7 +547,7 @@ flowchart TD
 
 ---
 
-## 九、维护方式①：抓包驱动
+## 十、维护方式①：抓包驱动
 
 ```mermaid
 flowchart TD
@@ -484,7 +587,7 @@ flowchart TD
 
 ---
 
-## 十、维护方式②：参考已有用例
+## 十一、维护方式②：参考已有用例
 
 ```mermaid
 flowchart TD
@@ -521,7 +624,7 @@ flowchart TD
 
 ---
 
-## 十一、维护方式③：cURL 手工
+## 十二、维护方式③：cURL 手工
 
 ```mermaid
 flowchart TD
@@ -560,7 +663,7 @@ flowchart TD
 
 ---
 
-## 十二、维护方式④：pytest 报错驱动
+## 十三、维护方式④：pytest 报错驱动
 
 ```mermaid
 flowchart TD
@@ -609,7 +712,7 @@ flowchart TD
 
 ---
 
-## 十三、pytest 闭环（新增四方式 / 维护四方式共用）
+## 十四、pytest 闭环（新增五方式 / 维护四方式共用）
 
 ```mermaid
 flowchart TD
@@ -648,16 +751,16 @@ flowchart TD
 
 ---
 
-## 十四、方式对比速查
+## 十五、方式对比速查
 
-| 维度 | 方式1 抓包 | 方式2 参考 | 方式3 cURL | 方式4 Java Controller |
-|---|---|---|---|---|
-| 典型场景 | 新接口多 / 复杂链路 | 同类用例批量 / 修改参数 | 抓包不可用 / 数据过多 | 后端已有接口定义但自动化未覆盖 |
-| 用户准备成本 | 低（UI 操作即可） | 中（指定参考） | 高（收集 cURL + 响应） | 中（提供 Controller/Jacoco） |
-| 新接口能力 | ✅ 索引驱动查重 | ⚠️ 默认不新增，必要时新增 | ✅ 按 cURL 新增 | ✅ 按源码提取后查重新增 |
-| AI 主观判断 | 低（索引 + 草稿） | 中（仿写需理解参考） | 中（需理解 cURL 语义） | 中高（需设计调用链路和场景分组） |
-| 最常见失败 | 登录态 / 浏览器代理 | 参考样本选错 | cURL 不全 / 响应缺失 | payload/前置变量从源码无法完整确定 |
-| 闭环严格度 | 强（草稿必停等） | 强（参考必 Read） | 强（cURL+响应必配对） | 强（源码分析草稿必停等，调试最多 3 次） |
+| 维度 | 方式1 抓包 | 方式2 参考 | 方式3 cURL | 方式4 Java Controller | 方式5 API-TPL |
+|---|---|---|---|---|---|
+| 典型场景 | 新接口多 / 复杂链路 | 同类用例批量 / 修改参数 | 抓包不可用 / 数据过多 | 后端已有接口定义但自动化未覆盖 | git-diff-analyse 缺口落地 / 勾选模版新增 |
+| 用户准备成本 | 低（UI 操作即可） | 中（指定参考） | 高（收集 cURL + 响应） | 中（提供 Controller/Jacoco） | 中（分析 run + 人工勾选 api-landing） |
+| 新接口能力 | ✅ 索引驱动查重 | ⚠️ 默认不新增，必要时新增 | ✅ 按 cURL 新增 | ✅ 按源码提取后查重新增 | ✅ 按 TPL 查重后新增/复用 |
+| AI 主观判断 | 低（索引 + 草稿） | 中（仿写需理解参考） | 中（需理解 cURL 语义） | 中高（需设计调用链路和场景分组） | 低（模版字段驱动；参数有则填无则空） |
+| 最常见失败 | 登录态 / 浏览器代理 | 参考样本选错 | cURL 不全 / 响应缺失 | payload/前置变量从源码无法完整确定 | 未勾选仍写 / `{param}` 全等匹配 / 缺触发步骤 |
+| 闭环严格度 | 强（草稿必停等） | 强（参考必 Read） | 强（cURL+响应必配对） | 强（源码分析草稿必停等，调试最多 3 次） | 强（仅 `[x]`；pytest 真绿；禁 commit） |
 
 ### 维护方式速查
 
@@ -672,7 +775,7 @@ flowchart TD
 
 ---
 
-## 十五、本流程图与 SKILL.md 的对应关系
+## 十六、本流程图与 SKILL.md 的对应关系
 
 | 流程图章节 | SKILL.md 对应章节 |
 |---|---|
@@ -683,18 +786,19 @@ flowchart TD
 | 五、新增方式② | `doc/mode_reference_case.md` |
 | 六、新增方式③ | `doc/mode_curl_manual.md` |
 | 七、新增方式④ | `doc/mode_java_controller_source.md` |
-| 八、维护任务总览 | `doc/maintenance_prompt_context.md` + 维护 mode 文件 |
-| 九、维护方式① | `doc/mode_maintenance_capture_driven.md` |
-| 十、维护方式② | `doc/mode_maintenance_reference_case.md` |
-| 十一、维护方式③ | `doc/mode_maintenance_curl_manual.md` |
-| 十二、维护方式④ | `doc/mode_maintenance_pytest_driven.md` |
-| 十三、pytest 闭环 | 核心原则 → 5. 测试必须闭环 |
-| 十四、对比速查 | 新增四方式 / 维护四方式共用规范 |
+| 八、新增方式⑤ | `doc/mode_api_tpl.md` + SKILL「如何触发新增方式 5」 |
+| 九、维护任务总览 | `doc/maintenance_prompt_context.md` + 维护 mode 文件 |
+| 十、维护方式① | `doc/mode_maintenance_capture_driven.md` |
+| 十一、维护方式② | `doc/mode_maintenance_reference_case.md` |
+| 十二、维护方式③ | `doc/mode_maintenance_curl_manual.md` |
+| 十三、维护方式④ | `doc/mode_maintenance_pytest_driven.md` |
+| 十四、pytest 闭环 | 核心原则 → 5. 测试必须闭环 |
+| 十五、对比速查 | 新增五方式 / 维护四方式共用规范 |
 | 附录 A、Hook 触发时序 | 🚨 前置必跑 0（由 hook 自动执行）+ 项目级 `.claude/settings.json` 的 `hooks.PreToolUse` |
 
 ---
 
-## 十六、维护说明
+## 十七、维护说明
 
 - 本文件与 `SKILL.md` 保持**双向一致**：修改任一侧流程，另一侧必须同步
 - Mermaid 语法兼容性优先 GitHub 与 VSCode 的 Mermaid 插件

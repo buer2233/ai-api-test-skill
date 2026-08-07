@@ -13,6 +13,7 @@ REQUIRED_MODES = {
     "new/reference_case",
     "new/curl_manual",
     "new/java_controller",
+    "new/api_tpl",
     "maintenance/capture_driven",
     "maintenance/reference_case",
     "maintenance/curl_manual",
