@@ -100,6 +100,7 @@ Full decision tree: [flow_chart/flow.md](./flow_chart/flow.md). This README keep
 | Creation | Reference case | Batch generation for similar APIs | [`doc/mode_reference_case.md`](./doc/mode_reference_case.md) |
 | Creation | cURL/manual | Clear request/response data without capture | [`doc/mode_curl_manual.md`](./doc/mode_curl_manual.md) |
 | Creation | Java Controller reference | Backend definitions exist but API tests are missing | [`doc/mode_java_controller_source.md`](./doc/mode_java_controller_source.md) |
+| Creation | API-TPL driven (git-diff-analyse phase 1) | Template landing from analysis report checklists | [`doc/mode_api_tpl.md`](./doc/mode_api_tpl.md) |
 | Maintenance | Capture-driven | Business flow changed across multiple APIs | [`doc/mode_maintenance_capture_driven.md`](./doc/mode_maintenance_capture_driven.md) |
 | Maintenance | Reference case | Stable test style with parameter/assertion updates | [`doc/mode_maintenance_reference_case.md`](./doc/mode_maintenance_reference_case.md) |
 | Maintenance | cURL/manual | Small and explicit endpoint changes | [`doc/mode_maintenance_curl_manual.md`](./doc/mode_maintenance_curl_manual.md) |
