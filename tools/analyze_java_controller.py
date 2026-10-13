@@ -262,13 +262,27 @@ def _method_block(lines: List[str], method_line_idx: int) -> Tuple[str, int]:
     return "\n".join(block), end_idx
 
 
+def _class_decl_index(lines: List[str]) -> int:
+    """返回类声明行下标，找不到时返回 -1"""
+    for i, line in enumerate(lines):
+        if re.search(r"^\s*(?:public\s+|final\s+|abstract\s+)*(?:class|interface|enum)\s+\w+", line):
+            return i
+    return -1
+
+
 def _parse_controller(source: str, coverage: Dict[int, dict]) -> List[dict]:
     lines = source.splitlines()
     class_mapping = _extract_class_mapping(source)
+    # 类级 @RequestMapping 位于类声明之前, 必须从类声明之后开始扫描,
+    # 否则该注解会被误当成方法级映射, 与类级路径重复拼接并吞掉第一个方法的真实路由
+    class_decl_idx = _class_decl_index(lines)
     endpoints: List[dict] = []
 
     idx = 0
     while idx < len(lines):
+        if class_decl_idx != -1 and idx <= class_decl_idx:
+            idx += 1
+            continue
         line = lines[idx].strip()
         mapping_type = ""
         http_method = ""
@@ -287,7 +301,7 @@ def _parse_controller(source: str, coverage: Dict[int, dict]) -> List[dict]:
 
         method_line_idx = -1
         for probe in range(idx + 1, min(idx + 12, len(lines))):
-            if re.search(r"\bpublic\b.+\w+\s*\(.*\)", lines[probe]):
+            if re.search(r"\bpublic\b.+\w+\s*\(", lines[probe]):
                 method_line_idx = probe
                 break
         if method_line_idx == -1:
@@ -295,7 +309,15 @@ def _parse_controller(source: str, coverage: Dict[int, dict]) -> List[dict]:
             continue
 
         annotation_lines = [lines[pos].strip() for pos in range(idx, method_line_idx)]
+        # 参数列表可能跨多行书写, 需累积到括号闭合为止, 否则下面的签名正则匹配不到
         signature = lines[method_line_idx].strip()
+        depth = signature.count("(") - signature.count(")")
+        probe = method_line_idx + 1
+        while depth > 0 and probe < len(lines):
+            extra = lines[probe].strip()
+            signature += " " + extra
+            depth += extra.count("(") - extra.count(")")
+            probe += 1
         sig = re.search(r"\bpublic\s+(.+?)\s+(\w+)\s*\((.*)\)", signature)
         if not sig:
             idx += 1
